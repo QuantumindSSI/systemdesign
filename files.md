@@ -1,6 +1,6 @@
 # System Design & LLM Engineering — Repo Reference
 
-28 repositories across six categories: system design fundamentals, LLM pretraining, post-training/alignment, inference engineering, agent & harness engineering, and production ML engineering.
+29 repositories across six categories: system design fundamentals, LLM pretraining, post-training/alignment, inference engineering, agent & harness engineering, and production ML engineering.
 
 *All links verified live on 2026-08-20 — existence, activity, and content claims checked against each repo's README. One removal noted at the bottom.*
 
