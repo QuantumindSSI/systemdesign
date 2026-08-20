@@ -1,0 +1,608 @@
+"""Content calendar generator: 2 posts/day, Sun-Sat, 100 weeks (1,400 posts).
+
+Deterministic - no randomness. Concepts are drawn from a structured bank built
+from curriculum.md and files.md. The 100 weeks form 5 editorial passes over 10
+content pillars (2 weeks per pillar per pass); a concept may recur across
+passes but always with a different editorial angle and format, and every
+working title is asserted globally unique.
+
+Outputs (written next to this script):
+  content_calendar.csv          - 1,400 rows, one complete brief per post
+  content_calendar_overview.md  - system documentation + 100-week index
+
+Run: python3 generate_calendar.py
+"""
+from __future__ import annotations
+
+import csv
+import os
+import sys
+from dataclasses import dataclass
+from datetime import date, timedelta
+
+START_DATE = date(2026, 8, 23)  # first Sunday after 2026-08-20
+WEEKS = 100
+POSTS_PER_DAY = 2
+AM_TIME = "09:00"
+PM_TIME = "17:00"
+
+# --------------------------------------------------------------------------
+# Content pillars: (key, name, source references rotated across posts)
+# --------------------------------------------------------------------------
+PILLARS = [
+    ("P1", "System Design Fundamentals", [
+        "github.com/donnemartin/system-design-primer",
+        "github.com/karanpratapsingh/system-design",
+        "github.com/ByteByteGoHq/system-design-101",
+        "github.com/binhnguyennus/awesome-scalability",
+        "github.com/ashishps1/awesome-system-design-resources",
+    ]),
+    ("P2", "LLM Internals & Pretraining", [
+        "github.com/rasbt/LLMs-from-scratch",
+        "github.com/karpathy/nanochat",
+        "github.com/RUCAIBox/awesome-llm-pretraining",
+        "github.com/FareedKhan-dev/train-llm-from-scratch",
+    ]),
+    ("P3", "Post-training & Alignment", [
+        "github.com/huggingface/trl",
+        "github.com/mbzuai-oryx/Awesome-LLM-Post-training",
+        "github.com/OpenRLHF/OpenRLHF",
+        "github.com/hiyouga/LlamaFactory",
+    ]),
+    ("P4", "Inference & Edge Deployment", [
+        "github.com/vllm-project/vllm",
+        "github.com/NVIDIA/TensorRT-LLM",
+        "github.com/ggml-org/llama.cpp",
+        "github.com/xlite-dev/Awesome-LLM-Inference",
+    ]),
+    ("P5", "Harness Engineering", [
+        "github.com/ai-boost/awesome-harness-engineering",
+        "github.com/DenisSergeevitch/agents-best-practices",
+        "curriculum.md Layer 2.3",
+    ]),
+    ("P6", "Loop & Graph Engineering", [
+        "github.com/cobusgreyling/loop-engineering",
+        "github.com/langchain-ai/langgraph",
+        "curriculum.md Layers 2.4-2.5",
+    ]),
+    ("P7", "Evals, Observability & Governance", [
+        "curriculum.md Layer 4",
+        "github.com/ai-boost/awesome-harness-engineering",
+        "github.com/DenisSergeevitch/agents-best-practices",
+    ]),
+    ("P8", "MLOps & Infrastructure", [
+        "github.com/ai-infra-curriculum/ai-infra-engineer-learning",
+        "github.com/amanchadha/coursera-machine-learning-engineering-for-prod-mlops-specialization",
+        "curriculum.md Layer 5",
+    ]),
+    ("P9", "Production Case Studies", [
+        "github.com/Engineer1999/A-Curated-List-of-ML-System-Design-Case-Studies",
+        "github.com/themanojdesai/genai-llm-ml-case-studies",
+        "github.com/binhnguyennus/awesome-scalability",
+        "curriculum.md Layer 6",
+    ]),
+    ("P10", "Career, FDE & Interviews", [
+        "github.com/alexeygrigorev/ai-engineering-field-guide",
+        "github.com/chiphuyen/machine-learning-systems-design",
+        "github.com/checkcheckzz/system-design-interview",
+        "curriculum.md Layer 1",
+    ]),
+]
+
+# --------------------------------------------------------------------------
+# Concept bank per pillar (natural noun phrases; each week consumes six)
+# --------------------------------------------------------------------------
+CONCEPTS: dict[str, list[str]] = {
+    "P1": [
+        "the CAP theorem", "PACELC tradeoffs", "consistent hashing",
+        "load balancing algorithms", "L4 vs L7 load balancing",
+        "reverse proxies", "CDN architecture", "DNS resolution paths",
+        "cache-aside vs write-through caching", "cache eviction policies",
+        "cache stampede protection", "database indexing", "B-trees vs LSM trees",
+        "SQL vs NoSQL selection", "database sharding strategies",
+        "leader-follower replication", "leaderless replication and quorums",
+        "Raft consensus", "two-phase commit vs sagas", "event sourcing",
+        "CQRS", "message queue semantics", "Kafka partitioning",
+        "exactly-once delivery", "idempotency keys", "rate limiting algorithms",
+        "circuit breakers", "bulkhead isolation", "backpressure",
+        "service discovery", "API gateway design", "gRPC vs REST",
+        "GraphQL tradeoffs", "WebSockets vs server-sent events",
+        "bloom filters", "HyperLogLog cardinality estimation", "geohashing",
+        "distributed unique ID generation", "clock skew and vector clocks",
+        "gossip protocols", "back-of-envelope capacity estimation",
+    ],
+    "P2": [
+        "self-attention mechanics", "multi-head attention", "BPE tokenization",
+        "embedding layers", "rotary positional encodings",
+        "pre-norm vs post-norm layer normalization", "residual streams",
+        "feed-forward blocks", "grouped-query attention",
+        "multi-head latent attention", "sliding-window attention",
+        "DeepSeek sparse attention", "mixture-of-experts routing",
+        "Chinchilla scaling laws", "pretraining data curation",
+        "dataset deduplication", "tokenizer training", "data mixture weighting",
+        "data parallelism", "tensor parallelism", "pipeline parallelism",
+        "ZeRO and FSDP sharding", "gradient checkpointing",
+        "BF16 and FP8 mixed precision", "optimizer choice for pretraining",
+        "learning-rate warmup and cosine decay", "loss spikes and training stability",
+        "checkpoint-resume discipline", "perplexity evaluation during pretraining",
+        "compute budgeting for training runs", "the nanochat pipeline stages",
+        "KV cache formation during training vs inference",
+        "curriculum ordering of training data", "vocabulary size tradeoffs",
+        "the emergent-abilities debate",
+    ],
+    "P3": [
+        "SFT data quality vs quantity", "chat templates and instruction formats",
+        "LoRA mechanics", "QLoRA quantized fine-tuning",
+        "full fine-tuning vs PEFT", "reward model training",
+        "the RLHF pipeline end to end", "PPO for language models",
+        "DPO mechanics", "DPO vs PPO tradeoffs", "GRPO", "ORPO", "KTO",
+        "rejection sampling and best-of-n", "RLAIF and constitutional methods",
+        "reasoning-model training with long chain-of-thought",
+        "distillation from teacher models", "verifiable rewards (RLVR)",
+        "reward hacking", "KL penalties and policy drift",
+        "catastrophic forgetting in fine-tuning", "the alignment tax",
+        "preference data collection", "synthetic training data generation",
+        "self-improvement loops", "safety tuning vs helpfulness",
+        "post-training eval suites", "OpenRLHF's Ray + vLLM architecture",
+        "TRL trainer anatomy", "LlamaFactory workflow design",
+    ],
+    "P4": [
+        "KV cache memory math", "PagedAttention", "continuous batching",
+        "prefill vs decode phases", "disaggregated prefill/decode serving",
+        "speculative decoding", "draft-model design", "INT8 quantization",
+        "INT4 quantization", "FP8 inference", "GPTQ vs AWQ",
+        "GGUF quantization levels", "KV cache quantization",
+        "FlashAttention kernels", "time-to-first-token vs throughput",
+        "p99 latency budgets", "cost per million tokens",
+        "vLLM vs TensorRT-LLM vs llama.cpp selection",
+        "OpenAI-compatible serving APIs", "grammar-constrained decoding",
+        "prompt caching", "batching strategies for agent workloads",
+        "on-device backends: Metal, CUDA, NPU", "model selection for edge hardware",
+        "context length vs memory tradeoffs", "air-gapped sovereign deployment",
+        "multi-tenant model serving", "GPU fleet autoscaling",
+        "small-model-first routing cascades", "embedding model serving",
+        "streaming token delivery", "tool-call latency budgets",
+        "energy constraints at the edge", "hardware-aware model choice",
+    ],
+    "P5": [
+        "the agent = model + harness equation", "inner vs outer harness boundaries",
+        "tool orchestration layers", "tool schema design",
+        "verification loops inside the harness", "context and memory layers",
+        "guardrail layers", "harness observability",
+        "structural fixes over prompt patches", "tool permission models",
+        "sandboxing and isolation", "environment routing",
+        "deterministic wrappers around tools", "bounded retry policies",
+        "error taxonomies: recoverable vs hard blockers",
+        "harnessability as an architecture criterion",
+        "system prompts as configuration", "context compaction",
+        "memory retrieval strategies", "MCP fundamentals",
+        "MCP server design", "project rules files", "agent skills packaging",
+        "regression suites for agent behavior", "prompt injection defenses",
+        "cost guards and budget enforcement", "event-driven vs polling waits",
+        "human-in-the-loop checkpoints", "agent CLI vs agentic IDE harnesses",
+        "testing harnesses for agents",
+    ],
+    "P6": [
+        "loop anatomy: trigger, topology, verifier, stop rules",
+        "the verifier as the bottleneck", "computational vs inferential verification",
+        "LLM-as-judge pitfalls", "stop rules and iteration budgets",
+        "the four nested loops", "hill-climbing the harness itself",
+        "recoverable-error vs hard-blocker classification",
+        "single-agent vs multi-agent tradeoffs", "org graphs vs work graphs",
+        "typed handoff contracts", "policy routers",
+        "fan-out and fan-in joins", "deterministic nodes vs agentic nodes",
+        "human checkpoints as graph nodes", "context saturation",
+        "unbounded delegation", "LangGraph state machines",
+        "graph checkpointing and time travel", "the supervisor pattern critique",
+        "swarm vs hierarchy topologies", "inter-agent message passing",
+        "shared memory design", "subagent context isolation",
+        "parallel agent worktrees", "merge and review gates",
+        "the ADE taxonomy", "spec-approval gates", "task boards for agent fleets",
+        "graph-level observability",
+    ],
+    "P7": [
+        "eval-driven development", "unit evals vs end-to-end evals",
+        "LLM-as-judge calibration", "golden datasets",
+        "regression evals in CI", "A/B testing agent changes",
+        "tracing agent runs", "correlated run and node identifiers",
+        "token cost dashboards", "prompt drift detection",
+        "canary deployments for prompts and models", "prompt and model versioning",
+        "the prompt injection taxonomy", "least-privilege agent permissions",
+        "data exfiltration risks", "PII handling in agent pipelines",
+        "audit logging for agents", "red-teaming agent systems",
+        "jailbreak resistance testing", "safety filter placement",
+        "EU AI Act readiness", "incident response for AI systems",
+        "hallucination measurement", "groundedness scoring",
+        "cost regression gates", "SLOs for agent systems",
+        "observability platform selection", "harnessability review checklists",
+    ],
+    "P8": [
+        "Docker images for ML workloads", "Kubernetes GPU scheduling",
+        "node pools and taints for GPU clusters", "MIG partitioning",
+        "distributed training orchestration", "Ray cluster operations",
+        "Airflow DAGs for data pipelines", "MLflow experiment tracking",
+        "model registries", "feature stores", "TFX pipelines",
+        "data validation gates", "concept drift monitoring",
+        "data drift vs concept drift", "retraining triggers",
+        "CI/CD for models", "blue-green model deployments",
+        "shadow deployments", "artifact versioning with DVC",
+        "GPU utilization monitoring", "spot instances and preemption handling",
+        "checkpoint storage strategies", "vector database operations",
+        "RAG pipeline infrastructure", "secrets management for ML stacks",
+        "infrastructure-as-code for ML", "GPU FinOps and cost optimization",
+        "capacity planning for training clusters",
+    ],
+    "P9": [
+        "Netflix's recommendation architecture", "Airbnb search ranking",
+        "DoorDash ETA prediction", "Uber's Michelangelo platform",
+        "Spotify's recommendation stack", "Pinterest visual search",
+        "Stripe's fraud detection ML", "LinkedIn feed ranking",
+        "Instacart demand forecasting", "GitHub Copilot's serving architecture",
+        "Klarna's support agent rollout", "enterprise RAG at scale",
+        "why 95% of enterprise agents die in prototype",
+        "coding-agent production postmortems", "fine-tune vs RAG decision cases",
+        "LLM cost-reduction case studies", "edge AI deployment case studies",
+        "multi-agent systems in production", "eval harness adoption stories",
+        "monolith-to-services migration lessons",
+        "scaling war stories from large tech companies",
+        "production incident write-ups", "the Evidently AI case-study lineage",
+        "ByteByteGo-style diagram breakdowns", "build vs buy for agent platforms",
+    ],
+    "P10": [
+        "the FDE role anatomy", "FDE vs MLE vs AI engineer",
+        "insights from 146 FDE job postings", "the AI system design interview format",
+        "answering scaling questions", "whiteboard frameworks",
+        "model-problem vs harness-problem diagnosis as a seniority signal",
+        "take-home assignment strategy", "portfolio projects that signal seniority",
+        "reading code as career leverage", "transitioning from data engineering",
+        "transitioning from backend engineering", "transitioning from ML research",
+        "leveling and compensation in AI infra", "company-by-company hiring loop data",
+        "resumes for AI roles", "building in public", "open-source contribution strategy",
+        "interview red flags", "mock interview drills", "negotiation for AI roles",
+        "staying current systematically", "T-shaped skill development",
+        "your first 90 days as an FDE",
+    ],
+}
+
+# --------------------------------------------------------------------------
+# Editorial passes: every pillar is revisited once per pass at a new angle
+# --------------------------------------------------------------------------
+ANGLES = [
+    ("Foundations", "from first principles",
+     "If the term is familiar but the mechanics are fuzzy, this pass is for you."),
+    ("Builder's Pass", "by building it yourself",
+     "Reading about it is not the same as building it. This pass, we build."),
+    ("Failure Modes", "through how it breaks in production",
+     "Everything breaks. This pass covers how this breaks and what the wreckage looks like."),
+    ("Scale & Hardening", "at production scale",
+     "What works in a demo dies at scale. This pass is about surviving contact with real traffic."),
+    ("Frontier & Mastery", "at the frontier, interview-grade",
+     "The difference between using a thing and being the person others ask about it."),
+]
+
+CTAS = [
+    "Save this for your next design review.",
+    "Repost this so your team sees it.",
+    "Comment your take - I read every reply.",
+    "Follow along - this series runs all week.",
+    "Tag someone who is debugging this right now.",
+    "Bookmark this; you will need it at 3am someday.",
+]
+
+DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+FIELDNAMES = [
+    "week", "date", "day", "slot", "time", "pillar", "weekly_theme",
+    "editorial_angle", "format", "working_title", "hook", "outline",
+    "cta", "source",
+]
+
+
+@dataclass
+class Slot:
+    week: int
+    d: date
+    day_name: str
+    slot: str
+    time: str
+
+
+def _outline(*bullets: str) -> str:
+    assert all(b.strip() for b in bullets), "empty outline bullet"
+    return " | ".join(bullets)
+
+
+def build_briefs(week: int, d: date, day_name: str, pillar_name: str,
+                 theme: str, angle: tuple[str, str, str],
+                 concepts: list[str], sources: list[str],
+                 global_idx: int) -> list[dict]:
+    """Return the AM and PM post briefs for one calendar day.
+
+    concepts: the six concepts assigned to this week (Mon..Sat order).
+    """
+    angle_name, angle_qual, angle_line = angle
+    src = sources[global_idx % len(sources)]
+    cta = CTAS[global_idx % len(CTAS)]
+    cta2 = CTAS[(global_idx + 3) % len(CTAS)]
+    am: dict[str, str]
+    pm: dict[str, str]
+
+    if day_name == "Sunday":
+        listed = "; ".join(concepts)
+        am = {
+            "format": "theme kickoff",
+            "working_title": f"Week {week} kickoff - {theme}",
+            "hook": f"This week: {pillar_name.lower()}, {angle_qual}. {angle_line}",
+            "outline": _outline(
+                f"Name the week's six topics: {listed}",
+                "One sentence on why this pillar matters at this angle right now",
+                "State what readers will be able to do by Saturday"),
+        }
+        pm = {
+            "format": "poll",
+            "working_title": f"Poll (week {week}): where are you with {pillar_name.lower()}?",
+            "hook": "Quick pulse-check before the deep dives start tomorrow.",
+            "outline": _outline(
+                "Option A: learning the vocabulary",
+                "Option B: built it once in a side project",
+                "Option C: run it in production",
+                "Option D: debugged it during an incident"),
+        }
+    elif day_name == "Monday":
+        c = concepts[0]
+        am = {
+            "format": "concept deep-dive",
+            "working_title": f"{c}, explained {angle_qual}",
+            "hook": f"Most engineers can name {c}. Far fewer can explain the mechanics. Here is the {angle_name.lower()} version.",
+            "outline": _outline(
+                f"Define {c} in two sentences, no jargon",
+                "Walk the core mechanism step by step with one concrete example",
+                "State the one misconception that causes the most damage"),
+        }
+        pm = {
+            "format": "annotated diagram",
+            "working_title": f"{c} in one diagram ({angle_name.lower()})",
+            "hook": f"If you cannot draw {c}, you do not understand it yet.",
+            "outline": _outline(
+                "Draw the components and the data flow between them",
+                "Annotate the step where the interesting work happens",
+                "Mark the failure point in red and say why it fails there"),
+        }
+    elif day_name == "Tuesday":
+        c = concepts[1]
+        am = {
+            "format": "repo walkthrough",
+            "working_title": f"Inside {src.split('/')[-1] if 'github' in src else src}: {c} in real code ({angle_name.lower()})",
+            "hook": f"Theory posts about {c} are everywhere. Today: where it actually lives in {src}.",
+            "outline": _outline(
+                f"Point to the exact files/sections in {src} that implement or document {c}",
+                "Trace one path through the code or material end to end",
+                f"Extract the one design decision worth stealing, read {angle_qual}"),
+        }
+        pm = {
+            "format": "snippet / config tip",
+            "working_title": f"A working snippet for {c} ({angle_name.lower()})",
+            "hook": f"One copy-pasteable block that makes {c} concrete.",
+            "outline": _outline(
+                "Show a minimal, runnable snippet or config exercising the concept",
+                "Annotate the two lines people get wrong",
+                "State the expected output so readers can self-verify"),
+        }
+    elif day_name == "Wednesday":
+        c = concepts[2]
+        am = {
+            "format": "case study",
+            "working_title": f"Case study: {c} in production ({angle_name.lower()})",
+            "hook": f"A real team, a real system, and {c} under actual load. What happened next was predictable in hindsight.",
+            "outline": _outline(
+                "Set the scene: company scale, constraint, and why this concept was on the critical path",
+                "Walk the decision, the implementation, and the number that moved",
+                f"Close with the transferable rule about {c}"),
+        }
+        pm = {
+            "format": "lessons listicle",
+            "working_title": f"5 lessons about {c} teams learn too late ({angle_name.lower()})",
+            "hook": f"Every one of these {c} lessons was paid for in an incident review.",
+            "outline": _outline(
+                f"Five one-line lessons framed {angle_qual}, each with the consequence of ignoring it",
+                "Order them from cheap-to-fix to career-limiting",
+                "End with the earliest warning signal to watch for"),
+        }
+    elif day_name == "Thursday":
+        c = concepts[3]
+        am = {
+            "format": "hands-on tutorial",
+            "working_title": f"Hands-on: {c} in under an hour ({angle_name.lower()})",
+            "hook": f"Stop reading about {c}. Here is the smallest real exercise that teaches it {angle_qual}.",
+            "outline": _outline(
+                "Define the end state: what exists and runs when the hour is up",
+                "Give the 4-6 numbered steps with the commands or code per step",
+                "Include the verification step that proves it worked"),
+        }
+        pm = {
+            "format": "common mistakes checklist",
+            "working_title": f"The {c} mistakes checklist ({angle_name.lower()})",
+            "hook": f"Five checks that catch 90% of {c} mistakes before they ship.",
+            "outline": _outline(
+                f"Five yes/no checks phrased so 'no' means stop and fix, targeting mistakes made {angle_qual}",
+                "For each: the symptom you will see in production if skipped",
+                "Make it screenshot-able as a single card"),
+        }
+    elif day_name == "Friday":
+        c = concepts[4]
+        am = {
+            "format": "contrarian take",
+            "working_title": f"Hot take: most advice about {c} is wrong ({angle_name.lower()})",
+            "hook": f"The standard advice on {c} optimizes for the demo, not the system you actually run.",
+            "outline": _outline(
+                "State the conventional wisdom fairly - steelman it in two lines",
+                "Show the specific context where it fails and the evidence",
+                "Give the replacement heuristic and its own limits"),
+        }
+        pm = {
+            "format": "debate prompt",
+            "working_title": f"Debate: is {c} necessary, or overengineering? ({angle_name.lower()})",
+            "hook": f"Two senior engineers, opposite positions on {c}, both with production scars. Pick a side.",
+            "outline": _outline(
+                f"Present position A with its strongest supporting scenario, argued {angle_qual}",
+                "Present position B with its strongest supporting scenario",
+                "Ask readers to reply with their context - team size, scale, stakes"),
+        }
+    else:  # Saturday
+        c = concepts[5]
+        covered = "; ".join(concepts[:5])
+        am = {
+            "format": "recap + quiz",
+            "working_title": f"Week {week} recap and quiz: {theme}",
+            "hook": "Six days of material in three questions. Answers in Monday's post.",
+            "outline": _outline(
+                f"Recap in one line each: {covered}",
+                "Three quiz questions: one recall, one application, one design tradeoff",
+                "Invite answers in the comments; no lookups allowed"),
+        }
+        pm = {
+            "format": "weekend challenge",
+            "working_title": f"Weekend challenge: {c} ({angle_name.lower()})",
+            "hook": f"90 focused minutes on {c} this weekend beats another saved-and-forgotten bookmark.",
+            "outline": _outline(
+                f"Define a scoped build/read exercise on {c}, {angle_qual}, with a visible artifact",
+                f"Point to the exact starting resource: {src}",
+                "Ask readers to post their artifact and tag it for review"),
+        }
+
+    base = {
+        "week": str(week), "date": d.isoformat(), "day": day_name,
+        "pillar": pillar_name, "weekly_theme": theme,
+        "editorial_angle": angle_name,
+    }
+    am_row = {**base, "slot": "AM", "time": AM_TIME, **am, "cta": cta, "source": src}
+    pm_row = {**base, "slot": "PM", "time": PM_TIME, **pm, "cta": cta2, "source": src}
+    return [am_row, pm_row]
+
+
+def generate() -> list[dict]:
+    assert START_DATE.weekday() == 6, "start date must be a Sunday"
+    assert len(PILLARS) == 10 and len(ANGLES) == 5, "5 passes x 10 pillars x 2 weeks = 100"
+    for key, _, _ in PILLARS:
+        assert len(CONCEPTS[key]) >= 13, f"{key} bank too small for angle rotation"
+
+    rows: list[dict] = []
+    concept_cursor = {key: 0 for key, _, _ in PILLARS}
+    week = 0
+    for pass_idx in range(5):
+        angle = ANGLES[pass_idx]
+        for pillar_idx in range(10):
+            key, pillar_name, sources = PILLARS[pillar_idx]
+            bank = CONCEPTS[key]
+            for part in (1, 2):
+                week += 1
+                theme = f"{pillar_name} - {angle[0]}, part {part}"
+                start = concept_cursor[key]
+                week_concepts = [bank[(start + i) % len(bank)] for i in range(6)]
+                concept_cursor[key] = (start + 6) % len(bank)
+                week_start = START_DATE + timedelta(weeks=week - 1)
+                for day_i in range(7):
+                    d = week_start + timedelta(days=day_i)
+                    rows.extend(build_briefs(
+                        week, d, DAYS[day_i], pillar_name, theme, angle,
+                        week_concepts, sources, global_idx=len(rows)))
+    return rows
+
+
+def validate(rows: list[dict]) -> None:
+    assert len(rows) == WEEKS * 7 * POSTS_PER_DAY, f"expected 1400 rows, got {len(rows)}"
+    titles = [r["working_title"] for r in rows]
+    dupes = {t for t in titles if titles.count(t) > 1}
+    assert not dupes, f"duplicate titles: {sorted(dupes)[:5]}"
+    assert rows[0]["date"] == START_DATE.isoformat(), "wrong start date"
+    expected_end = START_DATE + timedelta(days=WEEKS * 7 - 1)
+    assert rows[-1]["date"] == expected_end.isoformat(), "wrong end date"
+    for r in rows:
+        for f in FIELDNAMES:
+            assert str(r[f]).strip(), f"empty field {f} in row dated {r['date']}"
+    per_week: dict[str, int] = {}
+    for r in rows:
+        per_week[r["week"]] = per_week.get(r["week"], 0) + 1
+    assert all(v == 14 for v in per_week.values()), "every week must have 14 posts"
+
+
+def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
+    csv_path = os.path.join(out_dir, "content_calendar.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    md_path = os.path.join(out_dir, "content_calendar_overview.md")
+    end = START_DATE + timedelta(days=WEEKS * 7 - 1)
+    weeks_index: list[str] = []
+    seen: set[str] = set()
+    for r in rows:
+        if r["week"] not in seen:
+            seen.add(r["week"])
+            ws = date.fromisoformat(r["date"])
+            weeks_index.append(
+                f"| {r['week']} | {ws.isoformat()} - {(ws + timedelta(days=6)).isoformat()} "
+                f"| {r['pillar']} | {r['editorial_angle']} |")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write("\n".join([
+            "# Content Calendar - System Overview",
+            "",
+            f"**{WEEKS * 7 * POSTS_PER_DAY} posts** - 2/day (09:00 + 17:00), Sun-Sat, "
+            f"{WEEKS} weeks: {START_DATE.isoformat()} to {end.isoformat()}.",
+            "",
+            "Full calendar: `content_calendar.csv` (one complete brief per post: title, "
+            "hook, 3-bullet outline, CTA, source). Regenerate or re-date by editing "
+            "`generate_calendar.py` (set `START_DATE`) and rerunning - output is deterministic.",
+            "",
+            "## How the system works",
+            "",
+            "- **10 pillars** drawn from `curriculum.md` (Layers 0-6) and `files.md` (28 verified repos).",
+            "- **5 editorial passes x 20 weeks**: Foundations -> Builder's Pass -> Failure Modes -> "
+            "Scale & Hardening -> Frontier & Mastery. Every pillar gets 2 weeks per pass.",
+            "- **Concepts recur across passes by design** (pillar-cluster model) but never with the "
+            "same angle + format; all 1,400 titles are asserted unique at generation time.",
+            "- **Fixed daily cadence** so production becomes routine:",
+            "",
+            "| Day | 09:00 | 17:00 |",
+            "|---|---|---|",
+            "| Sun | Theme kickoff | Poll |",
+            "| Mon | Concept deep-dive | Annotated diagram |",
+            "| Tue | Repo walkthrough | Snippet / config tip |",
+            "| Wed | Case study | Lessons listicle |",
+            "| Thu | Hands-on tutorial | Mistakes checklist |",
+            "| Fri | Contrarian take | Debate prompt |",
+            "| Sat | Recap + quiz | Weekend challenge |",
+            "",
+            "## Working the calendar",
+            "",
+            "1. Batch-write one week (14 briefs) in a single sitting; the briefs are complete outlines.",
+            "2. The CSV imports directly into Notion, Google Sheets, Airtable, or Buffer/Hypefury.",
+            "3. Swap any concept by editing its pillar bank in the generator and rerunning.",
+            "",
+            "## 100-week index",
+            "",
+            "| Week | Dates | Pillar | Pass |",
+            "|---|---|---|---|",
+            *weeks_index,
+            "",
+        ]))
+    return csv_path, md_path
+
+
+def main() -> int:
+    out_dir = os.path.dirname(os.path.abspath(__file__))
+    rows = generate()
+    validate(rows)
+    csv_path, md_path = write_outputs(rows, out_dir)
+    uniq_concepts = sum(len(v) for v in CONCEPTS.values())
+    print(f"OK: {len(rows)} post briefs -> {csv_path}")
+    print(f"OK: overview + 100-week index -> {md_path}")
+    print(f"Range: {rows[0]['date']} ({rows[0]['day']}) -> {rows[-1]['date']} ({rows[-1]['day']})")
+    print(f"Concept bank: {uniq_concepts} concepts across {len(PILLARS)} pillars; "
+          f"all titles unique: True")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
