@@ -41,8 +41,9 @@
 
 ## Agent & Harness Engineering
 
-*Maps to Layers 2.3–2.5 of the curriculum: harness → loop → graph.*
+*Maps to Layers 2.3–2.5 of the curriculum: harness → loop → graph. Local companion: `agent-harness-engineering.md` (five components + evaluation layer).*
 
+- [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) — full AI-engineering reference manual (47k+ stars): agent workloads vs web workloads, the five harness components, loop/graph engineering, LLM-as-judge evaluation; ships installable agent skills (in `.agents/skills/`).
 - [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering) — awesome list for AI agent harness engineering: tools, patterns, evals, memory, MCP, permissions, observability, and orchestration.
 - [DenisSergeevitch/agents-best-practices](https://github.com/DenisSergeevitch/agents-best-practices) — provider-neutral agent skill and best practices for Codex, Claude Code, and agentic harness design.
 - [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) — practical patterns, starters, and CLI tools (`loop-audit`, `loop-init`, `loop-cost`) for loop engineering: designing the systems that prompt and orchestrate coding agents, verifier and stop-rule design included.

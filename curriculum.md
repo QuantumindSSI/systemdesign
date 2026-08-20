@@ -45,7 +45,7 @@ Curating *what* enters the context window, not what you say. RAG, MCP, project r
 - **Outer harness** (you build this — the real moat): environment routing, testing frameworks, situational guardrails
 - Five production layers: tool orchestration, verification loops, context/memory, guardrails, observability
 - Core discipline (Hashimoto's framing): every time an agent fails, you engineer a structural fix so it *cannot* fail that way again — not a prompt patch
-- Reference: [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering), [DenisSergeevitch/agents-best-practices](https://github.com/DenisSergeevitch/agents-best-practices)
+- Reference: [ai-boost/awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering), [DenisSergeevitch/agents-best-practices](https://github.com/DenisSergeevitch/agents-best-practices), [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch), and the local `agent-harness-engineering.md` (five components, gate-on-irreversibility, four stop conditions, three-layer evaluation)
 
 ### 2.4 Loop Engineering (mid-2026)
 
