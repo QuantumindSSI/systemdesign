@@ -21,6 +21,8 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 START_DATE = date(2026, 8, 23)  # first Sunday after 2026-08-20
+WEEK0_START = date(2026, 8, 20)  # launch block: Thu/Fri/Sat before week 1
+WEEK0_POSTS = 6
 WEEKS = 100
 POSTS_PER_DAY = 2
 AM_TIME = "09:00"
@@ -480,6 +482,79 @@ def build_briefs(week: int, d: date, day_name: str, pillar_name: str,
     return [am_row, pm_row]
 
 
+def build_week0() -> list[dict]:
+    """Launch block for the gap days before the first Sunday: Thu-Sat, 2/day.
+
+    Consolidation content: announce the series, walk the layer map, present
+    the repo library, set the cadence, and baseline the audience so week 1
+    starts on schedule with an oriented readership.
+    """
+    repo = "github.com/QuantumindSSI/systemdesign"
+    specs = [
+        (0, "AM", AM_TIME, "series announcement",
+         "Announcing: 100 weeks of agentic + ML systems engineering, 2 posts a day",
+         "~95% of enterprise agents die in prototype. Over the next 100 weeks I am publishing the dependency graph of skills that keeps yours out of that statistic - 2 posts a day, every day.",
+         _outline(
+             "State the thesis: agent skills form a dependency graph, and most engineers study the wrong layers",
+             "Preview the 10 pillars in one line each, from system design fundamentals to career/FDE",
+             "Set expectations: Sun-Sat cadence, fixed daily formats, first full week starts Sunday"),
+         "Follow along - this series runs all week.", "curriculum.md (in " + repo + ")"),
+        (0, "PM", PM_TIME, "poll",
+         "Poll: which pillar should this series go deepest on?",
+         "The calendar covers ten pillars over five passes. Vote for the one you want weighted heaviest - I will read the results before pass two.",
+         _outline(
+             "Option A: harness / loop / graph engineering",
+             "Option B: inference and edge deployment",
+             "Option C: system design fundamentals",
+             "Option D: career, FDE and interviews"),
+         "Comment your take - I read every reply.", "curriculum.md (in " + repo + ")"),
+        (1, "AM", AM_TIME, "concept deep-dive",
+         "The 7-layer map: why most engineers study the wrong layers",
+         "Layer 0 knowledge is table stakes. Layers 2-4 are where agents live or die - and where almost nobody invests. Here is the full map.",
+         _outline(
+             "Walk Layers 0-6 in one line each: foundations, model lifecycle, agent stack, ADEs, evals/governance, MLOps, applied grounding",
+             "Make the core claim: each layer assumes the one below it - skipping layers is how prototypes die",
+             "Close with a self-diagnosis question: which layer is your weakest link right now?"),
+         "Save this for your next design review.", "curriculum.md (in " + repo + ")"),
+        (1, "PM", PM_TIME, "resource roundup",
+         "The 28-repo reference library behind the next 100 weeks",
+         "Every repo in this library was verified live this week - existence, activity, and content claims checked against each README. This is the source material for everything that follows.",
+         _outline(
+             "Present the six categories with one anchor repo each",
+             "Explain the verification pass: what was checked and the one DMCA takedown it caught",
+             "Link the full annotated list and invite readers to flag gaps"),
+         "Bookmark this; you will need it at 3am someday.", "files.md (in " + repo + ")"),
+        (2, "AM", AM_TIME, "how-it-works guide",
+         "How this series works: the weekly cadence and the five passes",
+         "Same rhythm every week for 100 weeks: kickoff Sunday, deep-dive Monday, real code Tuesday, case study Wednesday, hands-on Thursday, hot take Friday, quiz Saturday.",
+         _outline(
+             "Show the day-by-day format table for both daily slots",
+             "Explain the five editorial passes: foundations, builder's pass, failure modes, scale, frontier",
+             "Tell readers how to follow: daily at 09:00/17:00, or batch the week every Sunday"),
+         "Follow along - this series runs all week.", "content_calendar_overview.md (in " + repo + ")"),
+        (2, "PM", PM_TIME, "weekend challenge",
+         "Weekend challenge: baseline yourself before week 1",
+         "Before the first deep-dive lands Sunday, take 20 minutes to score yourself - honestly - across all ten pillars. You will revisit this baseline at week 20.",
+         _outline(
+             "Rate yourself 1-5 on each of the ten pillars and keep the scores somewhere visible",
+             "Pick the pillar you are committing to move from a 2 to a 4 this year",
+             "Post your weakest pillar in the comments - accountability beats bookmarks"),
+         "Tag someone who is debugging this right now.", "curriculum.md (in " + repo + ")"),
+    ]
+    rows: list[dict] = []
+    for day_off, slot, t, fmt, title, hook, outline, cta, src in specs:
+        d = WEEK0_START + timedelta(days=day_off)
+        rows.append({
+            "week": "0", "date": d.isoformat(), "day": DAYS[(d.weekday() + 1) % 7],
+            "slot": slot, "time": t, "pillar": "Series Launch",
+            "weekly_theme": "Launch - consolidation before week 1",
+            "editorial_angle": "Launch", "format": fmt, "working_title": title,
+            "hook": hook, "outline": outline, "cta": cta, "source": src,
+        })
+    assert len(rows) == WEEK0_POSTS, "week 0 must contain exactly 6 posts"
+    return rows
+
+
 def generate() -> list[dict]:
     assert START_DATE.weekday() == 6, "start date must be a Sunday"
     assert len(PILLARS) == 10 and len(ANGLES) == 5, "5 passes x 10 pillars x 2 weeks = 100"
@@ -506,15 +581,21 @@ def generate() -> list[dict]:
                     rows.extend(build_briefs(
                         week, d, DAYS[day_i], pillar_name, theme, angle,
                         week_concepts, sources, global_idx=len(rows)))
-    return rows
+    # Week 0 is prepended after the main build so weeks 1-100 keep the exact
+    # rotation (and bytes) they had before the launch block existed.
+    return build_week0() + rows
 
 
 def validate(rows: list[dict]) -> None:
-    assert len(rows) == WEEKS * 7 * POSTS_PER_DAY, f"expected 1400 rows, got {len(rows)}"
+    expected = WEEKS * 7 * POSTS_PER_DAY + WEEK0_POSTS
+    assert len(rows) == expected, f"expected {expected} rows, got {len(rows)}"
     titles = [r["working_title"] for r in rows]
     dupes = {t for t in titles if titles.count(t) > 1}
     assert not dupes, f"duplicate titles: {sorted(dupes)[:5]}"
-    assert rows[0]["date"] == START_DATE.isoformat(), "wrong start date"
+    assert rows[0]["date"] == WEEK0_START.isoformat(), "week 0 must start 2026-08-20"
+    assert rows[0]["day"] == "Thursday", "week 0 must start on a Thursday"
+    assert rows[WEEK0_POSTS]["date"] == START_DATE.isoformat(), "week 1 must start on START_DATE"
+    assert rows[WEEK0_POSTS]["day"] == "Sunday", "week 1 must start on a Sunday"
     expected_end = START_DATE + timedelta(days=WEEKS * 7 - 1)
     assert rows[-1]["date"] == expected_end.isoformat(), "wrong end date"
     for r in rows:
@@ -523,7 +604,8 @@ def validate(rows: list[dict]) -> None:
     per_week: dict[str, int] = {}
     for r in rows:
         per_week[r["week"]] = per_week.get(r["week"], 0) + 1
-    assert all(v == 14 for v in per_week.values()), "every week must have 14 posts"
+    assert per_week.pop("0") == WEEK0_POSTS, "week 0 must have 6 posts"
+    assert all(v == 14 for v in per_week.values()), "weeks 1-100 must have 14 posts each"
 
 
 def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
@@ -535,21 +617,23 @@ def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
 
     md_path = os.path.join(out_dir, "content_calendar_overview.md")
     end = START_DATE + timedelta(days=WEEKS * 7 - 1)
-    weeks_index: list[str] = []
-    seen: set[str] = set()
+    spans: dict[str, tuple[str, str, str, str]] = {}
     for r in rows:
-        if r["week"] not in seen:
-            seen.add(r["week"])
-            ws = date.fromisoformat(r["date"])
-            weeks_index.append(
-                f"| {r['week']} | {ws.isoformat()} - {(ws + timedelta(days=6)).isoformat()} "
-                f"| {r['pillar']} | {r['editorial_angle']} |")
+        first, _, pillar, angle = spans.get(
+            r["week"], (r["date"], r["date"], r["pillar"], r["editorial_angle"]))
+        spans[r["week"]] = (first, r["date"], pillar, angle)
+    weeks_index = [
+        f"| {wk} | {first} - {last} | {pillar} | {angle} |"
+        for wk, (first, last, pillar, angle) in spans.items()
+    ]
+    total = WEEKS * 7 * POSTS_PER_DAY + WEEK0_POSTS
     with open(md_path, "w", encoding="utf-8") as f:
         f.write("\n".join([
             "# Content Calendar - System Overview",
             "",
-            f"**{WEEKS * 7 * POSTS_PER_DAY} posts** - 2/day (09:00 + 17:00), Sun-Sat, "
-            f"{WEEKS} weeks: {START_DATE.isoformat()} to {end.isoformat()}.",
+            f"**{total} posts** - a 6-post launch block (week 0: Thu {WEEK0_START.isoformat()} "
+            f"to Sat), then 2/day (09:00 + 17:00), Sun-Sat, for {WEEKS} weeks: "
+            f"{START_DATE.isoformat()} to {end.isoformat()}.",
             "",
             "Full calendar: `content_calendar.csv` (one complete brief per post: title, "
             "hook, 3-bullet outline, CTA, source). Regenerate or re-date by editing "

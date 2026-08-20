@@ -1,6 +1,6 @@
 # Content Calendar - System Overview
 
-**1400 posts** - 2/day (09:00 + 17:00), Sun-Sat, 100 weeks: 2026-08-23 to 2028-07-22.
+**1406 posts** - a 6-post launch block (week 0: Thu 2026-08-20 to Sat), then 2/day (09:00 + 17:00), Sun-Sat, for 100 weeks: 2026-08-23 to 2028-07-22.
 
 Full calendar: `content_calendar.csv` (one complete brief per post: title, hook, 3-bullet outline, CTA, source). Regenerate or re-date by editing `generate_calendar.py` (set `START_DATE`) and rerunning - output is deterministic.
 
@@ -31,6 +31,7 @@ Full calendar: `content_calendar.csv` (one complete brief per post: title, hook,
 
 | Week | Dates | Pillar | Pass |
 |---|---|---|---|
+| 0 | 2026-08-20 - 2026-08-22 | Series Launch | Launch |
 | 1 | 2026-08-23 - 2026-08-29 | System Design Fundamentals | Foundations |
 | 2 | 2026-08-30 - 2026-09-05 | System Design Fundamentals | Foundations |
 | 3 | 2026-09-06 - 2026-09-12 | LLM Internals & Pretraining | Foundations |
