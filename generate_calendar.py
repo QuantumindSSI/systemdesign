@@ -684,6 +684,9 @@ def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
             "1. Batch-write one week (14 briefs) in a single sitting; the briefs are complete outlines.",
             "2. The CSV imports directly into Notion, Google Sheets, Airtable, or Buffer/Hypefury.",
             "3. Swap any concept by editing its pillar bank in the generator and rerunning.",
+            "4. Numerical grounding rule: every number in a published post must name its source "
+            "inline, be explicitly flagged as unaudited at the point of use, or be cut "
+            "(QSSI research persona, Amendment 1).",
             "",
             "## 100-week index",
             "",
