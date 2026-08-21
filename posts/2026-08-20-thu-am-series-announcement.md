@@ -1,34 +1,31 @@
-# Week 0 · Thu 2026-08-20 · 09:00 · Series announcement
+# Week 0 · Thu 2026-08-20 · 09:00 · Series announcement (v2, persona-grounded)
 
 > Calendar row: week 0, AM. Format: series announcement. Source: curriculum.md.
+> Voice/standards: QSSI research persona (Laws I–VI applied conversationally — calibrated
+> uncertainty, pre-registration, sunset protocols, adversarial review). v1 in git history.
 > Platform notes: post as-is on LinkedIn; for X, split at the horizontal rules into a thread.
 
 ---
 
 The models keep getting better. The agents keep dying in prototype.
 
-The number that gets passed around is 95% — ninety-five out of a hundred enterprise agent projects never survive contact with production. I believe it, because I've watched how they die. It's almost never the model. It's everything around the model: nobody designed the tools, nobody versioned the prompts, nobody decided when a human gets to veto, nobody wrote a single eval. The whole thing runs on hope and a demo dataset, right up until it doesn't.
+The number everyone quotes is 95% — ninety-five out of a hundred enterprise agent projects never survive contact with production. I've repeated that number myself, so let me hold it to the standard I'm about to hold everything else to: I can't fully audit it. What I *can* audit is the pattern behind it, because I've watched these projects die up close, and the autopsy is almost never the model. It's everything around the model. Nobody designed the tools. Nobody versioned the prompts. Nobody decided when a human gets to veto. Nobody wrote a single eval. The whole thing ran on hope and a demo dataset, right up until it didn't.
 
-Here's the thing that took me embarrassingly long to see: these skills stack in a specific order. You can't debug an agent loop if you can't read an inference bill. You can't read an inference bill if you don't know what a KV cache is doing to your memory. There's a dependency graph hiding under this field, and most engineers walk it in exactly the wrong order — six months grinding transformer math (which is table stakes now), then winging the layer where projects actually die.
+Here's what took me embarrassingly long to see: these skills stack in a specific order. You can't debug an agent loop if you can't read an inference bill. You can't read an inference bill if you don't know what a KV cache is doing to your memory. There's a dependency graph under this field, and most engineers walk it backwards — six months grinding transformer math (table stakes now), then winging the layer where projects actually die.
 
-So I'm going to walk the whole graph, in order, in public. Starting Sunday: 100 weeks, 2 posts a day. Every day.
+So I'm walking the whole graph, in order, in public. Starting Sunday: 100 weeks, 2 posts a day, every day.
 
-The ten pillars, roughly bottom to top:
+And because "trust me" is exactly the disease this series is against, it runs under five rules:
 
-1. System design fundamentals — CAP, caching, sharding. Boring. Load-bearing.
-2. LLM internals & pretraining — what's actually inside the thing you're renting
-3. Post-training & alignment — SFT, RLHF, DPO, and why your fine-tune got dumber
-4. Inference & edge — where latency, cost, and physics collect their debts
-5. Harness engineering — an agent is a model plus everything you built around it
-6. Loop & graph engineering — verifiers, stop rules, and multi-agent topology
-7. Evals, observability & governance — the layer everyone skips. See: 95%.
-8. MLOps & infrastructure — the substrate nobody tweets about
-9. Production case studies — how real systems failed, and occasionally didn't
-10. Career & FDE — turning all of the above into leverage
+1. **Everything is pre-registered.** All 1,400+ posts were planned and committed to version control before this one went out. If I quietly rewrite the plan to look smarter later, git will tattle.
+2. **Nothing gets cited unverified.** Every repo backing this series — 29 of them this week — gets checked: alive, active, and actually saying what people claim it says. One had already been DMCA'd off GitHub. It was retired with a note, not silently swapped.
+3. **Claims carry their uncertainty.** When I know, I'll say how. When I'm guessing, the post will say "I'm guessing." You just watched me do it to my own favorite statistic.
+4. **Corrections are content.** When something I taught turns out wrong, the correction gets its own post — dead ideas get a burial, not a stealth edit.
+5. **The plan updates on evidence.** Your comments and polls are data. Pass two of this series gets re-weighted on them, and I'll show the numbers when it does.
 
-The rhythm never changes, so you always know what's coming: kickoff Sunday, deep-dive Monday, real code from a real repo Tuesday, case study Wednesday, something hands-on Thursday, a hot take Friday, a quiz Saturday. Morning post teaches. Evening post argues.
+The ten pillars, bottom to top: system design fundamentals (boring, load-bearing) → LLM internals & pretraining → post-training & alignment → inference & edge → harness engineering → loop & graph engineering → evals, observability & governance (the skipped layer — see: 95%) → MLOps & infrastructure → production case studies → career & FDE.
 
-One promise about sourcing: every claim in this series traces back to a repo you can clone or a document you can read. I verified all 29 repos backing this series this week — existence, activity, whether the README actually says what people claim it says. The verification pass caught one repo that had been quietly DMCA'd off GitHub. That's the standard: checked, not vibes.
+The rhythm never changes: kickoff Sunday, deep-dive Monday, real code Tuesday, case study Wednesday, hands-on Thursday, a fight on Friday — steelman first, then attack — and a quiz Saturday. Morning teaches. Evening argues.
 
 Week 1 opens Sunday with system design fundamentals, from first principles. Follow along, or don't — but if your agent dies in prototype next quarter, at least you'll know which layer it died in.
 
