@@ -1,30 +1,38 @@
-# Week 0 · Thu 2026-08-20 · 17:00 · Poll (v3, strict persona)
+# Week 0 · Thu 2026-08-20 · 17:00 · Poll (v4, constitution + research persona)
 
 > Calendar row: week 0, PM. Format: poll. Source: curriculum.md.
-> Standards: QSSI research persona, applied strictly — prior stated openly,
-> instrument defined, update commitment published. Full prose, no fragments,
-> no contractions. v1 and v2 in git history.
-> Continuity: fulfils the poll promised in this morning's announcement.
+> Standards: persona-constitution (decisive, adversarially reviewed) + QSSI research
+> persona (prior stated with credence, sample characteristics, update condition,
+> boundary condition) + Amendment 1. v1–v3 in git history.
+>
+> Adversarial review record (numbers audit):
+> - "seventy percent" — declared as personal credence at point of use, not a measurement ✓
+> - "one hundred weeks", "ten pillars", "second pass" — the committed plan, named inline ✓
+> - "before the first post went out this morning" — verifiable in version control ✓
+> Research-persona audit: prior stated in full with credence; sample characteristics
+> named; the evidence that updates the prior is defined before votes exist; the
+> poll's boundary (this audience, not the field) is stated; write-ins solicited as
+> the strongest form of disagreement.
 
 ---
 
-This morning I promised you a poll, and I promised that before you voted in it, I would tell you exactly what I currently believe — because a stated prior can be tested, while an unstated one quietly becomes a bias. Here is the belief, in full.
+This morning I promised you a poll, and I promised that before you voted I would tell you exactly what I believe. A stated prior can be tested. An unstated one quietly becomes a bias. Here is mine, stated properly: with its confidence, its sample, and its limits.
 
-From watching agent projects die and watching engineers get hired over the last two years, I believe that most of you need the evaluation and harness layers most, because that is where production systems actually fail, and that most of you want the career layer most, because that is where the effort pays its bills. Those are two different claims about the same audience, and I have never measured either one. Every content plan I have ever seen was built on exactly this kind of unmeasured belief, defended by whoever held it. I would rather instrument mine. This poll is the instrument.
+I believe most of you need the evaluation and harness layers most, because that is where the production systems I have inspected actually failed. I believe most of you want the career layer most, because that is where the effort pays its bills. Those are two different claims about the same audience. I hold each at roughly seventy percent — a personal credence, not a measurement, formed from the agent projects and the hiring processes I have personally been part of. The sample is small, it is enterprise-shaped, and it has never included you. That last part is the point. This poll is the instrument that measures what I have only been assuming, and its boundary is honest too: it measures this audience, not the field.
 
-So, one vote. Over the next hundred weeks, where should this series go deepest?
+One vote. Over the next one hundred weeks, where should this series go deepest?
 
-**Option A is harness, loop, and graph engineering** — the discipline of everything you build around the model: the tools, the verifiers, the stop conditions, and the multi-agent topologies that no job title fully admits to owning yet.
+**Option A — harness, loop, and graph engineering.** Everything you build around the model: the tools, the verifiers, the stop conditions, and the multi-agent topologies that no job title fully owns yet.
 
-**Option B is inference and edge deployment** — serving engines, quantization, latency budgets, and the bill that arrives whether or not you understood it.
+**Option B — inference and edge deployment.** Serving engines, quantization, latency budgets, and the bill that arrives whether or not you understood it.
 
-**Option C is system design fundamentals** — the classical layer of caching, consistency, and failure handling that quietly decides whether anything built above it works at all.
+**Option C — system design fundamentals.** The classical layer of caching, consistency, and failure handling that quietly decides whether anything built above it works at all.
 
-**Option D is career and forward-deployed engineering** — converting the entire stack into interviews passed, offers signed, and a role that survives the next hype cycle.
+**Option D — career and forward-deployed engineering.** Converting the entire stack into interviews passed, offers signed, and a role that survives the next hype cycle.
 
-Vote with a single letter in the comments, or in the poll widget where the platform provides one. And if your honest answer is not on this list, write it in instead, because the most informative failure of any poll is the option it forgot to offer. Write-in answers have redrawn my roadmap before, and I weight them accordingly.
+Vote with a single letter in the comments, or in the poll widget where the platform provides one. If your honest answer is not on this list, write it in. The most informative failure of any poll is the option it forgot to offer, and a write-in is the strongest form of disagreement you can hand me. Disagreement is not noise here. It is the input this system is designed to run on.
 
-Two commitments, so that this is measurement rather than engagement theatre. The first pass of this series is already locked — all of it was committed to version control before the first post went out this morning, which means your vote cannot flatter me into rewriting history. And when the second pass is planned, I will publish the full tally beside the re-weighted calendar, so that you can check precisely how far your vote bent it. If the data says my belief about you was wrong, the calendar bends. Strong opinions, updated on contact with evidence — that is the entire discipline this series exists to teach, and it may as well be governed by it.
+Two commitments, so this is measurement and not engagement theatre. The first pass of this series was committed to version control before the first post went out this morning, so your vote cannot flatter me into rewriting history. When the second pass is planned, the full tally will be published beside the re-weighted calendar, so you can check precisely how far your vote bent it — and if the result says my seventy percent was misplaced, you will watch it get corrected in public. Strong beliefs, held with stated confidence, updated on contact with evidence. That is the discipline this series teaches. It may as well be governed by it.
 
 ---
 
