@@ -1,11 +1,14 @@
 # Week 0 · Sat AM · How-it-works guide · Publish cut (LinkedIn)
 
-> Source of truth: `posts/2026-08-22-sat-am-how-it-works.md` (v1). That body is
-> 4,945 chars; LinkedIn's post limit is 3,000. This cut is 2,999 chars, measured
+> Source of truth: `posts/2026-08-22-sat-am-how-it-works.md` (v2). That body is
+> 4,818 chars; LinkedIn's post limit is 3,000. This cut is 2,999 chars, measured
 > (`len()`, 2026-08-22), sha256 44eecc0290369d08. The repo md stays canonical,
-> so nothing is lost — only compressed.
+> so nothing is lost — only compressed. The two v2 canonical edits (signpost
+> sentence cut, passive construction activated) fall outside this cut, which
+> never contained either line: the paste body is byte-identical to the v1 cut,
+> re-verified against the recorded sha256.
 >
-> Deltas from the committed v1 copy, in full:
+> Deltas from the committed v2 copy, in full:
 > 1. Condensed 4,945 → 2,999. Every number kept its source or flag in-sentence:
 >    post counts → the committed calendar ("all pre-registered"); pass ranges, run
 >    dates, and 2027-05-30 → the committed index; the spiral-learning claim →

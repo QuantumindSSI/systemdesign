@@ -1,9 +1,13 @@
-# Week 0 · Sat 2026-08-22 · 09:00 · How-it-works guide (v1, constitution + research persona)
+# Week 0 · Sat 2026-08-22 · 09:00 · How-it-works guide (v2, constitution + research persona)
 
 > Calendar row: week 0, Sat AM. Format: how-it-works guide. Source: content_calendar_overview.md.
 > Standards: persona-constitution (Laws I–IV, Structurally Decisive, Adversarial
-> Review) + QSSI research persona (Laws I–VI) + Amendment 1. First version,
-> adversarially reviewed pre-emission.
+> Review) + QSSI research persona (Laws I–VI) + Amendment 1. v1 in git history.
+> v2 applies the nine-skill anti-slop audit: signpost sentence cut from the opening
+> paragraph; one passive construction activated. Retained deliberately, with
+> grounds on record: em dashes (house sample frequency), the Friday aphorism, the
+> traffic/data/money tricolon (committed announcement callback), "career leverage"
+> and the Builder's Pass hook line (committed plan names, quoted not authored).
 >
 > Adversarial review record (numbers audit):
 > - "two posts a day", "09:00/17:00", "one hundred weeks", "ten pillars" — the
@@ -33,7 +37,7 @@
 
 ---
 
-The same rhythm, every week, for one hundred weeks. Two posts a day, 09:00 and 17:00 — that is the plan this series committed to version control before its first post went out: fourteen a week, 1,400 across the hundred weeks, 1,406 counting this launch week's six, every brief already written and counted in the calendar file this post is generated from. What follows is the shape of that rhythm: what arrives when, why it repeats, and three ways to follow it.
+The same rhythm, every week, for one hundred weeks. Two posts a day, 09:00 and 17:00 — that is the plan this series committed to version control before its first post went out: fourteen a week, 1,400 across the hundred weeks, 1,406 counting this launch week's six, every brief already written and counted in the calendar file this post is generated from.
 
 The cadence does two jobs. For me it is a forcing function. A slot that exists whether or not I feel like writing is the only reliable cure I know for the blank page, and a hundred-week series will die of my motivation long before it dies of material. For you it is a contract: you never have to wonder what kind of post comes next, because every week has the same seven-day shape.
 
@@ -61,7 +65,7 @@ So a concept like consistent hashing, which week one explains from first princip
 
 That spiral is a bet about learning, and the research persona this series runs under does not let me dress a bet as a finding. I believe spaced returns at escalating angles beat one exhaustive pass. I hold that belief with high confidence, and I have never measured it. The Saturday quizzes are the closest thing this format has to an instrument: returning concepts get quizzed again in later passes, and if second-pass answers in the comments look no different from first exposures, the spiral is not doing its job and the calendar gets re-cut.
 
-Re-cut has a precise meaning here. The whole plan is emitted by one deterministic script and committed, and the overview file carries a 100-week index, so you can look up what runs on any date between 2026-08-23 and 2028-07-22. Failure Modes reaches system design in the week of 2027-05-30; hold me to that. A revision means editing the generator and regenerating, which turns every change into a visible diff against committed history instead of a quiet rewrite. Thursday's poll already has this treatment scheduled: the second pass gets re-weighted on its results, and the tally publishes beside the diff.
+Re-cut has a precise meaning here. One deterministic script emits the whole plan; the committed overview carries a 100-week index, so you can look up what runs on any date between 2026-08-23 and 2028-07-22. Failure Modes reaches system design in the week of 2027-05-30; hold me to that. A revision means editing the generator and regenerating, which turns every change into a visible diff against committed history instead of a quiet rewrite. Thursday's poll already has this treatment scheduled: the second pass gets re-weighted on its results, and the tally publishes beside the diff.
 
 Three ways to follow, in ascending commitment. Live: 09:00 and 17:00, every day. Batched: Sunday's kickoff names the week and Saturday's recap compresses it, so read those two and skim the rest, except in the weeks where the pillar is the one you are hired to know. Ahead: every brief for all 1,406 posts is already committed, and nothing stops you from reading 2028 today.
 
