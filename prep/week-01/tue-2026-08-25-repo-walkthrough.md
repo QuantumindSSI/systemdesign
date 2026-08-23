@@ -7,38 +7,14 @@
 > not archived. Local clone at `repos/awesome-system-design-resources`
 > (gitignored). Re-verify the repo is unchanged on post day.
 
-## EDITORIAL DECISION REQUIRED BEFORE WRITING
+## EDITORIAL DECISION · RESOLVED 2026-08-23
 
-The committed brief cannot run as written. Verified 2026-08-22 by grep over the
-full clone: **the string "PACELC" appears nowhere in this repository.** The
-generator paired the week's concept with the pillar's repo bank mechanically
-and this pairing is wrong. Two honest ways out:
-
-**Option A (recommended): keep the repo, walk its real code.**
-The repo is not just a link list - it ships working implementations:
-
-- `implementations/python/consistent_hashing/consistent-hashing.py` (~75 lines)
-- `implementations/python/load_balancing_algorithms/` - five algorithms:
-  `round_robin.py.py` (typo in the filename is real, verify it still exists on
-  post day - it is an honest, likable detail), `weighted_round_robin.py`,
-  `least_connections.py`, `least_response_time.py`, `ip_hash.py`
-- `implementations/python/rate_limiting/` - five rate limiter variants
-- Java mirrors of all of the above
-
-Walk `consistent-hashing.py`. It sets up Wednesday's case study (Dynamo uses
-exactly this scheme) and Thursday's video (which measures these algorithms).
-The week becomes one arc: read the code Tue, see it at Amazon scale Wed, run
-it yourself Thu.
-
-**Option B: keep PACELC, swap the repo.**
-PACELC genuinely lives in `karanpratapsingh/system-design` (verified in clone:
-README.md line 39 TOC entry, chapter at lines 1586-1596 with the Daniel Abadi
-attribution and a diagram). But that chapter is prose, not code, and the
-committed format promises "real code". Weaker fit; use only if Tuesday must
-stay on PACELC. Note Tuesday PM's snippet keeps PACELC alive either way.
-
-If A is chosen, the calendar CSV row should be regenerated/edited afterward to
-match what ran (same discipline as the launch-week slip).
+The committed brief paired PACELC with this repo and the pairing was wrong:
+**the string "PACELC" appears nowhere in this repository** (grep over full
+clone, 2026-08-22). Two options documented. **Chose Option A: keep the repo,
+walk its real code.** PACELC stays in Tuesday PM's snippet; the week's arc is
+read the code Tue, see it at Amazon scale Wed, run it yourself Thu. The
+calendar CSV row must be regenerated/edited to match what ran.
 
 ## Walkthrough beats (Option A), file: `implementations/python/consistent_hashing/consistent-hashing.py`
 
