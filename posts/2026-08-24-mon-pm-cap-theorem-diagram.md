@@ -15,6 +15,10 @@
 >   async replication link, one read request arriving after the link breaks ✓
 > - "no image" constraint: confirmed against the house posting checklist
 >   (text-only LinkedIn posts, no attachments) ✓
+>
+> Companion reference: `posts/2026-08-24-mon-cap-theorem-longform.md` extends
+> this same example into PACELC and named-system classifications. Not a
+> scheduled slot; standing context for the rest of week 1.
 
 ---
 
