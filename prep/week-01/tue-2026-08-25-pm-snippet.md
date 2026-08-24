@@ -5,12 +5,14 @@
 > annotate the two lines people get wrong | state expected output for
 > self-verification.
 >
-> Context available: `posts/2026-08-24-mon-cap-theorem-longform.md` already
-> defines PACELC ("if partitioned, choose availability or consistency per
-> CAP; otherwise, choose latency or consistency") with a worked example
-> (Singapore replica-lag case). This post's job is to make that definition
-> concrete with running code and measured numbers, not to re-explain PACELC
-> from scratch. Reference it rather than duplicate the definition.
+> Context available: `posts/2026-08-24-mon-am-essay-cap-theorem.md` (renamed
+> 2026-08-24 from `2026-08-24-mon-cap-theorem-longform.md` under the new
+> file-naming convention) already defines PACELC ("if partitioned, choose
+> availability or consistency per CAP; otherwise, choose latency or
+> consistency") with a worked example (Singapore replica-lag case). This
+> post's job is to make that definition concrete with running code and
+> measured numbers, not to re-explain PACELC from scratch. Reference it
+> rather than duplicate the definition.
 
 ## The snippet
 

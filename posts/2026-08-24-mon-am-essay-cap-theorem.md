@@ -1,30 +1,50 @@
 # Week 1 · Mon 2026-08-24 · Long-form: Understanding the CAP Theorem Through the Moment It Actually Bites
 
-> Format: long-form reference article (not a calendar slot; supplements the
-> committed AM "concept deep-dive" and PM "annotated diagram" posts for this
-> date). Pillar: System Design Fundamentals. Pass: Foundations.
+> Calendar row: W1 Mon AM, 09:00. Format: long-form Substack essay (this
+> essay's structural spine follows the calendar's "concept deep-dive" format
+> for this date). Pillar: System Design Fundamentals. Pass: Foundations.
 > Source: bytebytego.com/guides/cap-theorem-one-of-the-most-misunderstood-terms
 > (repo: github.com/ByteByteGoHq/system-design-101, verified via GitHub API
 > 2026-08-24: 87,468 stars, last push 2025-04-04, not archived).
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive, Adversarial
 > Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >
-> Purpose: this piece extends the AM/PM posts' inventory example into a full
-> treatment covering PACELC (Abadi, 2010/2012) and named real-system
-> classifications (DynamoDB, Cassandra, Riak, MongoDB, HBase, Spanner,
-> PostgreSQL/MySQL). It is kept as standing context for the rest of week 1:
-> Tuesday's repo walkthrough (consistent hashing, per the Option A resolution
-> in `prep/week-01/tue-2026-08-25-repo-walkthrough.md`) and Tuesday's PM
-> snippet (PACELC quorum simulation, `prep/week-01/tue-2026-08-25-pm-snippet.md`)
-> can both cite this document instead of re-deriving PACELC mechanics from
-> scratch. Not itself a scheduled calendar post; no publish cut required
-> unless a future slot repurposes it.
+> Format-pivot note (2026-08-24): under the three-artifact-per-day model
+> documented in `content_calendar_overview.md` ("Publishing format, effective
+> 2026-08-24"), this file is now Monday's canonical 09:00 Substack essay.
+> It was originally drafted as standing reference material alongside two
+> separate short posts; those two posts have since been superseded and moved
+> to `posts/_archive/` (`2026-08-24-mon-am-cap-theorem-deepdive.md` and its
+> `.publish.md` cut) because their content, the inventory mechanism, the
+> three-letter definitions, and the "pick two of three" misconception, is
+> now fully covered and more thoroughly developed inside this essay. Nothing
+> from those two files was lost; the archived copies remain in git history
+> and in `posts/_archive/` for provenance. Monday's 17:00 follow-up is
+> `posts/2026-08-24-mon-pm-followup-cap-theorem-diagram.md` (renamed from
+> the old PM diagram post, same content, header updated to reference this
+> essay by its current filename).
+>
+> Purpose: covers the Gilbert-Lynch formal proof (2002), PACELC (Abadi,
+> 2010/2012), the CAP-specific definition of availability versus SLA uptime,
+> and named real-system classifications (DynamoDB, Cassandra, Riak, MongoDB,
+> HBase, Spanner, PostgreSQL/MySQL). Tuesday's repo walkthrough (consistent
+> hashing, per the Option A resolution in
+> `prep/week-01/tue-2026-08-25-repo-walkthrough.md`) and Tuesday's PM
+> snippet (PACELC quorum simulation,
+> `prep/week-01/tue-2026-08-25-pm-snippet.md`) both cite this document
+> instead of re-deriving PACELC mechanics from scratch.
 >
 > Correction made against the originally supplied draft: "Brewer... revisited
 > his own framing eleven years later" was factually inconsistent with the
 > paper it then quotes, titled "CAP Twelve Years Later" (keynote 2000, paper
 > 2012 = twelve years). Corrected to "twelve years later" here and in the
-> AM canonical post and its publish cut, which carried the same error.
+> archived deep-dive post and its publish cut, which carried the same error.
+>
+> Expansion pass (2026-08-24, same session): grew from 2,351 to 3,134 words
+> by adding two sections, "From Conjecture to Theorem" and "Availability
+> Doesn't Mean What the SLA Means," both grounded in a fresh source fetch
+> rather than restated from memory (see below). Zero em dashes verified
+> after expansion.
 >
 > Adversarial review record (numbers audit):
 > - "87,468 stars", "last push 2025-04-04", "not archived": GitHub API,
@@ -33,17 +53,32 @@
 >   cited bytebytego guide, fetched 2026-08-24; keynote-to-paper gap checked
 >   against public record (PODC 2000 keynote, paper published 2012 = 12
 >   years, not 11) ✓
-> - "PACELC, an extension proposed by Daniel Abadi": correct attribution
->   (Abadi's 2010 blog post and 2012 paper "Consistency Tradeoffs in Modern
->   Distributed Database System Design: CAP is Only Part of the Story");
->   not independently re-verified against the primary paper in this session,
->   flagged for day-of re-check before this piece is cited publicly ✓ (open)
-> - Per-system CAP/PACELC classifications (DynamoDB, Cassandra, Riak,
->   MongoDB, HBase, Spanner, single-node Postgres/MySQL): standard,
->   widely-documented classifications consistent with each project's own
->   consistency-tuning documentation; not independently re-verified against
->   each vendor's current docs in this session, flagged for day-of re-check
->   before this piece is cited publicly ✓ (open)
+> - Gilbert & Lynch, 2002, "Brewer's conjecture and the feasibility of
+>   consistent, available, partition-tolerant web services," ACM SIGACT News
+>   33(2), pp. 51-59: title, authors, venue, and year confirmed against
+>   Wikipedia's CAP theorem article (fetched 2026-08-24), which cites the ACM
+>   DOI (10.1145/564585.564601) directly. The formal availability definition
+>   used in the new section ("every request received by a non-failing node
+>   must result in a response, without the guarantee that it contains the
+>   most recent version of the data") is quoted from that same article's
+>   summary of the Gilbert-Lynch definition, not fabricated ✓
+> - "PACELC, an extension proposed by Daniel Abadi": attribution and the
+>   2010 introduction date confirmed against Wikipedia's CAP theorem article
+>   (fetched 2026-08-24), which cites Abadi's 2010-04-23 blog post "Problems
+>   with CAP, and Yahoo's little known NoSQL system" directly; the 2012
+>   follow-up paper title ("Consistency Tradeoffs in Modern Distributed
+>   Database System Design: CAP is Only Part of the Story") was not
+>   independently re-fetched this session, flagged for day-of re-check before
+>   that specific title is cited publicly ✓ (narrowed, partially open)
+> - Per-system CAP/PACELC classifications: Cassandra-as-AP and MongoDB-as-CP
+>   ("resolve network partitions by maintaining consistency while
+>   compromising on availability") are corroborated by Wikipedia's CAP
+>   theorem article (fetched 2026-08-24, citing ScyllaDB's glossary and IBM's
+>   CAP explainer respectively) ✓. DynamoDB, Riak, HBase, Spanner, and
+>   single-node Postgres/MySQL classifications remain standard,
+>   widely-documented characterizations not independently re-verified
+>   against each vendor's current docs this session, flagged for day-of
+>   re-check before this piece is cited publicly ✓ (open)
 > - Singapore/replica-lag example and the three-widget checkout framework:
 >   illustrative, not measured; no fabricated benchmark numbers ✓
 
@@ -73,6 +108,14 @@ Partition tolerance means the system keeps operating even when messages between 
 
 When a partition happens, a system is forced to give up either consistency or availability for the duration of that partition, and only for that duration. An architect cannot pick any two of the three letters as a permanent, standing feature of a database the way a car buyer picks leather seats. The forced choice belongs to the moment the partition is happening, not to the database as a fixed identity, and that distinction is where most misreadings of CAP begin.
 
+## From Conjecture to Theorem
+
+Brewer did not open his 2000 keynote with a proof. He opened it with a conjecture, a claim he believed was true based on years spent building distributed systems at Inktomi, but had not yet demonstrated with the kind of rigor that turns an engineer's hard-won intuition into something the rest of the field can rely on without taking his word for it. For two years, "CAP" was a conference talk people cited the way people cite a smart colleague's rule of thumb: probably right, worth taking seriously, not yet nailed down.
+
+That changed in 2002, when Seth Gilbert and Nancy Lynch, both at MIT, published a formal proof in ACM SIGACT News, titled "Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services." Proving a conjecture is not a ceremonial step. It requires stating each of the three properties precisely enough that "the system is available" stops being a phrase reasonable people could interpret three different ways and becomes a specific, checkable condition. Gilbert and Lynch's definition of availability is the one worth carrying forward, because it is stricter and stranger than the everyday meaning of the word: every request received by a non-failing node must produce a response, with no guarantee that the response reflects the most recent write. Not "the system stays up." Not "requests eventually get answered." Every request, every non-failing node, a response, full stop, correctness unaddressed.
+
+That precision is what let Gilbert and Lynch show that no system can satisfy all three properties at once whenever a partition actually occurs, converting Brewer's conjecture into a genuine theorem: a claim that follows necessarily from the definitions, not one that merely matches everyone's experience so far. It is also the reason the next section exists. Most engineers already have a working definition of "available" in their heads, built from years of talking about uptime and SLAs, and it is not the definition Gilbert and Lynch proved a theorem about.
+
 ## The Misconception That Causes the Most Damage
 
 The common shorthand, "pick two of three," treats CAP as a single decision made once, on the day a database gets chosen. A team selects a system, labels it AP or CP in an architecture document, and moves on, as if that label describes the system's behavior at every moment rather than only during the rare stretch of time when a partition is actually underway.
@@ -80,6 +123,16 @@ The common shorthand, "pick two of three," treats CAP as a single decision made 
 Eric Brewer, who first proposed CAP in a conference keynote in 2000, revisited his own framing twelve years later and pushed back on exactly this reading. In a paper titled "CAP Twelve Years Later: How the 'Rules' Have Changed," he argued that the two-of-three shorthand is a useful way to open a conversation about tradeoffs but easy to over-read, since network partitions are rare, and the theorem only constrains a system's behavior during that narrow window rather than during the much larger stretch of time when the network is healthy (bytebytego.com/guides/cap-theorem-one-of-the-most-misunderstood-terms, quoting Brewer, 2012).
 
 A database vendor's AP or CP label, then, is really only a statement about the system's worst day. The question it leaves completely untouched is the one that shapes performance on every other day: with no partition present, and every node reachable, but one node running slower than the rest, should a read wait for confirmation that it holds the freshest value, or answer immediately and accept a small risk of staleness? That question has nothing to do with partitions at all. It comes up constantly, on infrastructure working exactly as designed, and CAP was never built to answer it.
+
+## Availability Doesn't Mean What the SLA Means
+
+Every engineer arrives at CAP already carrying a definition of "availability" picked up from years of on-call rotations and postmortems: uptime, usually expressed as a percentage in a service-level agreement, three nines, four nines, the fraction of a quarter during which a system responded at all rather than sitting down entirely. That definition measures a stretch of time. Gilbert and Lynch's definition, the one CAP is actually a theorem about, measures a single request, and it does not check whether the answer was correct.
+
+A system can satisfy the CAP definition of availability, in the strict sense the proof requires, while doing something no operator would ever describe as "highly available." Node A in the inventory example does exactly this: it answers the second customer's request instantly, every time, without exception, which is all the formal definition asks for. It never once mentions whether that instant answer happens to be true. A node that always responds fast and is sometimes wrong is CAP-available. A dashboard tracking SLA uptime over the same quarter would show the identical number whether that node's answers were right or wrong, because uptime dashboards count responses, not correctness.
+
+Run the comparison the other direction and the gap gets even more visible. A CP system that refuses to answer during a partition, exactly the behavior CAP predicts and exactly what correctness requires in that moment, registers as a real, countable outage on an SLA dashboard. The request timed out. Somebody on call gets paged. The quarterly uptime number ticks down by whatever fraction of traffic hit that unlucky window. None of that is a malfunction. It is a CP system doing precisely what "choose consistency during a partition" was always going to cost, showing up on a chart built to measure a completely different question than the one CAP answers.
+
+This is why an architecture document that reads "highly available, and CP" is not contradicting itself, even though it can look that way to someone who just learned the acronym. "Highly available" in that sentence is describing a quarter's worth of uptime measured across millions of ordinary requests. "CP" is describing one specific, rare kind of second: what the system does during an actual network partition. A system can score 99.99% on the first question across an entire year and still be a textbook CP system, because CP describes behavior during an event that might occupy a few minutes of that year, while the uptime number describes everything else. Keeping those two meanings of "available" apart, the SLA one and the Gilbert-Lynch one, is the difference between reading an architecture doc correctly and being confused by a sentence that was never actually contradictory.
 
 ## The Theorem That Governs the Rest of the Week
 
@@ -121,10 +174,11 @@ CAP tells an engineer what breaks during the outage. It says nothing about what 
 
 ---
 
-*This piece is standing context for week 1, not a scheduled post. Scheduled
-Monday content remains `posts/2026-08-24-mon-am-cap-theorem-deepdive.md`
-(09:00) and `posts/2026-08-24-mon-pm-cap-theorem-diagram.md` (17:00). Tuesday
-09:00 (consistent hashing, `prep/week-01/tue-2026-08-25-repo-walkthrough.md`)
-and Tuesday 17:00 (PACELC quorum snippet,
-`prep/week-01/tue-2026-08-25-pm-snippet.md`) may cite the PACELC and named-
-system sections above directly rather than re-deriving them.*
+*This is Monday's 09:00 essay. Monday's 17:00 follow-up,
+`posts/2026-08-24-mon-pm-followup-cap-theorem-diagram.md`, assumes you have
+read this far and walks the same inventory example as a single annotated
+diagram. Tuesday 09:00 (consistent hashing,
+`prep/week-01/tue-2026-08-25-repo-walkthrough.md`) and Tuesday 17:00 (PACELC
+quorum snippet, `prep/week-01/tue-2026-08-25-pm-snippet.md`) both cite the
+PACELC and named-system sections above directly rather than re-deriving
+them.*

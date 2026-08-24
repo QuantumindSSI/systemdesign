@@ -21,6 +21,40 @@ Full calendar: `content_calendar.csv` (one complete brief per post: title, hook,
 | Fri | Contrarian take | Debate prompt |
 | Sat | Recap + quiz | Weekend challenge |
 
+## Publishing format (effective 2026-08-24, week 1 onward)
+
+Platform is Substack, not LinkedIn. Each calendar day produces three artifacts,
+not one post per slot:
+
+- **09:00 - the essay.** A full long-form Substack essay, 2,500-3,500 words.
+  The day's `format` column (concept deep-dive, repo walkthrough, case study,
+  etc.) is not a separate short post; it is the essay's spine, the structural
+  backbone the essay is organized around. A "concept deep-dive" essay leads
+  with a plain-language definition, walks the mechanism with a concrete
+  example, and closes on the load-bearing misconception. A "case study" essay
+  leads with the scene, walks the decision and the numbers, and closes on the
+  transferable rule. The outline column in the CSV names the spine's beats;
+  the essay fills each beat out to full depth rather than one sentence.
+- **17:00 - the follow-up.** A short 500-700 word post that buttresses the
+  morning essay: same day, same underlying example, does not introduce a new
+  topic. It is built around that day's PM `format` column exactly as before
+  (annotated diagram, snippet, listicle, and so on), just short instead of a
+  standalone LinkedIn post. It assumes the reader has read the 09:00 essay
+  and reinforces one piece of it (a diagram, a runnable snippet, a checklist)
+  rather than repeating the whole argument.
+- **Teasers, one file, four platforms.** A short comment-length teaser for
+  Twitter/X, LinkedIn, Reddit, and Quora, each in that platform's native
+  voice and length convention, each linking back to the Substack essay. These
+  replace the old full-repost "publish cut": the essay lives on Substack,
+  the other platforms only ever get a hook and a link, never the full text.
+
+File naming for each day: `posts/{date}-{day}-am-essay-{slug}.md` (the
+essay), `posts/{date}-{day}-pm-followup-{slug}.md` (the buttressing
+follow-up), `posts/{date}-{day}-teasers.md` (the four-platform bundle). Each
+essay and follow-up file carries an editorial audit header (source
+verification, numbers audit) above a `---` marker; only the content below
+that marker is the reader-facing publish copy.
+
 ## Working the calendar
 
 1. Batch-write one week (14 briefs) in a single sitting; the briefs are complete outlines.
