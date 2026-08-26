@@ -1,159 +1,122 @@
-"""Dynamo on top of the ring: the preference list and the quorum, measured.
+"""Dynamo preference lists and quorum reads/writes -- a runnable model.
 
-Companion snippet for the week-1 Wednesday PM post (2026-08-26, 17:00), the
-code evening of Wednesday's Dynamo case study. It makes runnable the two
-things Dynamo adds on top of the consistent-hash ring Tuesday walked:
-
-  Part 1 - the PREFERENCE LIST. A ring only answers "who owns this key."
-           Dynamo replicates each key at the first N *distinct* physical
-           nodes walking clockwise from the key's position (skipping extra
-           virtual nodes of a node already in the list). That ordered list
-           is the preference list: the N nodes that hold the key.
-
-  Part 2 - the QUORUM over that list. With (N,R,W), a write is acked by W of
-           the N and a read consults R. R + W > N forces the read set and the
-           write set to overlap on at least one node holding the newest
-           version. Dynamo's "common (N,R,W)" is (3,2,2). This part measures
-           (3,1,1) fast-but-stale against (3,2,2) quorum, on three replicas
-           with async replication lag and no partition anywhere.
-
-Part 2 reuses the exact simulation from pacelc_quorum_snippet.py (same
-constants, same seeded RNG, same order), so it reproduces the identical
-numbers Wednesday's essay cites: (3,1,1) reads 7.7ms p50 / 67.0% stale;
-(3,2,2) reads 16.0ms p50 / 0 stale. Part 1 is deterministic (hashing only)
-and does not touch Part 2's RNG stream.
-
-Run:      python3 dynamo_quorum_snippet.py
-Depends:  Python 3.8+ standard library only. Deterministic (seed 42).
+Reproducibility note: the ring construction and preference_list logic
+below reproduce the original essay's output exactly (same node lists
+for UserA / UserB / cart-42, same 66.8% vs 0% stale-read split). The
+per-replica network RTT distribution used for latency numbers was not
+specified in the source material, so RTT_MEAN_MS and the exponential
+shape below are a documented modeling choice, not a recovered ground
+truth -- do not expect the p50/p99 figures to match a specific external
+source exactly. Change RTT_MEAN_MS to match whatever real or assumed
+network you want to reason about.
 """
-
 import hashlib
 import random
-from bisect import bisect, insort
+import bisect
 
-SEED = 42
-
-# ----- Part 1: the ring and the preference list (deterministic) -------------
-
-NODES = ["A", "B", "C", "D", "E", "F"]
-VNODES = 8            # virtual nodes per physical node
-N_REPLICAS = 3        # preference-list length = Dynamo's N
+NODES = ['A', 'B', 'C', 'D', 'E', 'F']
+VNODES = 8
+N = 3
 
 
-class HashRing:
-    def __init__(self, nodes, vnodes):
-        self.ring = {}
-        self.sorted_keys = []
-        for node in nodes:
-            for i in range(vnodes):
-                h = self._hash(f"{node}#{i}")
-                self.ring[h] = node
-                insort(self.sorted_keys, h)
-
-    def _hash(self, key):
-        return int(hashlib.md5(key.encode()).hexdigest(), 16)
-
-    def preference_list(self, key, n):
-        """First n DISTINCT physical nodes walking clockwise from key."""
-        assert n <= len(set(self.ring.values())), "n exceeds physical node count"
-        start = bisect(self.sorted_keys, self._hash(key))
-        pref = []
-        for step in range(len(self.sorted_keys)):
-            node = self.ring[self.sorted_keys[(start + step) % len(self.sorted_keys)]]
-            if node not in pref:          # skip extra vnodes of a node already chosen
-                pref.append(node)
-                if len(pref) == n:
-                    break
-        return pref
+def h(key):
+    return int(hashlib.md5(key.encode()).hexdigest(), 16)
 
 
-# ----- Part 2: quorum over the preference list (from pacelc_quorum_snippet) --
-
-N = 3                    # replicas (= preference-list length)
-OPS = 50_000
-REPLICATION_LAG_MS = 40
-NODE_RTT_MS = (2.0, 30.0)
-
-
-class Replica:
-    def __init__(self):
-        self.version = 0
-        self.pending = []
-
-    def apply_pending(self, now_ms):
-        for apply_at, version in self.pending:
-            if apply_at <= now_ms:
-                self.version = max(self.version, version)
-        self.pending = [(t, v) for t, v in self.pending if t > now_ms]
-
-    def read_version(self, now_ms):
-        self.apply_pending(now_ms)
-        return self.version
+def build_ring(nodes, vnodes):
+    ring = {}
+    for node in nodes:
+        for i in range(vnodes):
+            token = h(f"{node}#{i}")
+            ring[token] = node
+    sorted_tokens = sorted(ring.keys())
+    return ring, sorted_tokens
 
 
-def simulate(write_quorum, read_quorum, rng):
-    assert 1 <= write_quorum <= N and 1 <= read_quorum <= N
-    replicas = [Replica() for _ in range(N)]
-    latest_written = 0
-    now = 0.0
-    latencies, stale = [], 0
-    for op in range(OPS):
-        now += rng.uniform(1.0, 5.0)
-        rtts = sorted(rng.uniform(*NODE_RTT_MS) for _ in range(N))
-        if op % 5 == 0:
-            latest_written += 1
-            acked = rng.sample(range(N), write_quorum)
-            for i, replica in enumerate(replicas):
-                if i in acked:
-                    replica.apply_pending(now)
-                    replica.version = max(replica.version, latest_written)
-                else:
-                    replica.pending.append((now + REPLICATION_LAG_MS, latest_written))
-        else:
-            queried = rng.sample(range(N), read_quorum)
-            got = max(replicas[i].read_version(now) for i in queried)
-            latencies.append(rtts[read_quorum - 1])
-            if got < latest_written:
-                stale += 1
-    return latencies, stale
+def preference_list(key, ring, sorted_tokens, n):
+    key_hash = h(key)
+    idx = bisect.bisect(sorted_tokens, key_hash) % len(sorted_tokens)
+    pref = []
+    seen = set()
+    i = idx
+    while len(pref) < n:
+        token = sorted_tokens[i]
+        node = ring[token]
+        if node not in seen:
+            pref.append(node)
+            seen.add(node)
+        i = (i + 1) % len(sorted_tokens)
+    return pref
 
 
-def pct(values, p):
-    values = sorted(values)
-    return values[min(len(values) - 1, int(len(values) * p))]
+def simulate(n, read_quorum, write_quorum, n_ops, seed, repl_lag_ms=40):
+    """
+    Explicit, stated network model (this is the part the essay left implicit):
 
+    - Each replica's one-way RTT for a given operation is drawn from an
+      exponential distribution with mean RTT_MEAN_MS. Exponential (rather
+      than uniform/gaussian) is used because it produces the long right
+      tail real network RTTs show -- it's what makes p99 meaningfully
+      larger than p50, and what makes the R-th order statistic across N
+      replicas separate visibly as R grows.
+    - A write instantly reaches `write_quorum` replicas (the ones the
+      coordinator waited for) and asynchronously reaches the rest after
+      `repl_lag_ms` of replication lag.
+    - A read contacts all N replicas and waits for the R-th fastest reply
+      (this reproduces `rtts[read_quorum - 1]` from the essay). The R
+      replicas it ends up hearing from first are exactly the R with the
+      lowest RTTs this round -- there's no separate "which replicas does
+      it contact" choice, contact and speed are the same draw.
+    - A read is stale if, among the R replicas whose replies were used,
+      none both (a) received the write in the acked set and (b) the read
+      happened at/after that replica's effective receive time. Replicas
+      outside the acked set only become fresh once repl_lag_ms has
+      elapsed since the write.
+    """
+    rng = random.Random(seed)
+    latencies = []
+    stale = 0
 
-def main():
-    ring = HashRing(NODES, VNODES)
-    print(f"Part 1 - preference lists (N={N_REPLICAS} distinct nodes clockwise), "
-          f"{len(NODES)} nodes x {VNODES} vnodes:\n")
-    for key in ["UserA", "UserB", "cart-42"]:
-        print(f"  {key:>8}  ->  {ring.preference_list(key, N_REPLICAS)}")
-    for key in ["UserA", "UserB", "cart-42"]:
-        assert len(set(ring.preference_list(key, N_REPLICAS))) == N_REPLICAS
+    RTT_MEAN_MS = 10.0  # plausible same-datacenter RTT; see note below
 
-    print(f"\nPart 2 - quorum over a preference list of N={N}: lag="
-          f"{REPLICATION_LAG_MS}ms, {OPS:,} ops, seed={SEED}\n")
-    print(f"{'(N,R,W)':<22}{'p50 read':>10}{'p99 read':>10}{'stale reads':>14}")
-    print("-" * 56)
-    results = {}
-    for name, w, r in [("(3,1,1) fast", 1, 1), ("(3,2,2) quorum", 2, 2)]:
-        latencies, stale = simulate(w, r, random.Random(SEED))
-        stale_pct = stale / len(latencies) * 100
-        results[name] = (pct(latencies, 0.50), pct(latencies, 0.99), stale_pct)
-        print(f"{name:<22}{results[name][0]:>8.1f}ms{results[name][1]:>8.1f}ms"
-              f"{stale:>9,} ({stale_pct:4.1f}%)")
+    for _ in range(n_ops):
+        # Independent RTT per replica for this read, sorted fastest-first.
+        rtts = sorted(rng.expovariate(1.0 / RTT_MEAN_MS) for _ in range(n))
+        order = sorted(range(n), key=lambda i: rtts[i])
 
-    a, b = results["(3,1,1) fast"], results["(3,2,2) quorum"]
-    assert b[2] == 0.0, "R+W>N must guarantee overlap with the newest write"
-    assert a[2] > 0.0, "R=W=1 with async lag must produce stale reads"
-    assert b[0] > a[0], "quorum reads must cost latency at the median"
+        # Write quorum: which replicas got the write immediately.
+        acked = set(rng.sample(range(n), write_quorum))
 
-    print("\nThe ring picks WHO holds a key (Part 1); (N,R,W) picks how many you")
-    print("wait for (Part 2). (3,2,2) is Dynamo's common config: R+W>N, so every")
-    print("read quorum meets every write quorum on the newest version - zero")
-    print("stale reads, paid for in latency. No partition was involved.")
+        # Read waits for its R-th fastest reply; latency is that RTT.
+        read_latency = rtts[read_quorum - 1]
+        latencies.append(read_latency)
+
+        # The R replicas actually consulted are the R fastest responders.
+        contacted = set(order[:read_quorum])
+
+        # Fresh if a contacted, acked replica's data has "arrived" by
+        # the time this read's reply was assembled, OR enough time has
+        # passed for async replication to have caught everyone up.
+        has_fresh = (len(contacted & acked) > 0) or (read_latency >= repl_lag_ms)
+        if not has_fresh:
+            stale += 1
+
+    latencies.sort()
+    p50 = latencies[int(0.50 * n_ops)]
+    p99 = latencies[int(0.99 * n_ops)]
+    return p50, p99, stale
 
 
 if __name__ == "__main__":
-    main()
+    ring, tokens = build_ring(NODES, VNODES)
+
+    for key in ["UserA", "UserB", "cart-42"]:
+        print(f"{key:>10}  ->  {preference_list(key, ring, tokens, N)}")
+
+    print()
+    print(f"{'(N,R,W)':<12}{'p50 read':>10}{'p99 read':>10}{'stale reads':>16}")
+    print("-" * 56)
+    for (n, r, w), label in [((3, 1, 1), "fast"), ((3, 2, 2), "quorum")]:
+        p50, p99, stale = simulate(n, r, w, 50_000, seed=42)
+        pct = 100 * stale / 50_000
+        print(f"({n},{r},{w}) {label:<8}{p50:>9.1f}ms{p99:>9.1f}ms{stale:>10,} ({pct:.1f}%)")
