@@ -394,22 +394,22 @@ def build_briefs(week: int, d: date, day_name: str, pillar_name: str,
     elif day_name == "Tuesday":
         c = concepts[1]
         am = {
-            "format": "repo walkthrough",
-            "working_title": f"Inside {src.split('/')[-1] if 'github' in src else src}: {c} in real code ({angle_name.lower()})",
-            "hook": f"Theory posts about {c} are everywhere. Today: where it actually lives in {src}.",
+            "format": "concept deep-dive",
+            "working_title": f"The mental model for {c}, before the code ({angle_name.lower()})",
+            "hook": f"Skip the diagram. Here's the problem {c} exists to solve, and the shape of the fix, before you read a line of code.",
             "outline": _outline(
-                f"Point to the exact files/sections in {src} that implement or document {c}",
-                "Trace one path through the code or material end to end",
-                f"Extract the one design decision worth stealing, read {angle_qual}"),
+                f"Define the failure {c} fixes, in two lines with a concrete example",
+                "Build the mechanism conceptually, at the level of outcomes, not code",
+                f"State what {c} still doesn't do, the gaps the code inherits"),
         }
         pm = {
-            "format": "snippet / config tip",
-            "working_title": f"A working snippet for {c} ({angle_name.lower()})",
-            "hook": f"One copy-pasteable block that makes {c} concrete.",
+            "format": "repo walkthrough",
+            "working_title": f"Tracing the code that implements {c} ({angle_name.lower()})",
+            "hook": f"The evening code half: the real implementation of {c} in {src}, read line by line.",
             "outline": _outline(
-                "Show a minimal, runnable snippet or config exercising the concept",
-                "Annotate the two lines people get wrong",
-                "State the expected output so readers can self-verify"),
+                f"Point to the exact file in {src} that implements {c} and read every line",
+                "Trace one path through the code end to end, recomputing the real values",
+                "Name the one line that is an honest tradeoff, not a bug"),
         }
     elif day_name == "Wednesday":
         c = concepts[2]
@@ -423,13 +423,13 @@ def build_briefs(week: int, d: date, day_name: str, pillar_name: str,
                 f"Close with the transferable rule about {c}"),
         }
         pm = {
-            "format": "lessons listicle",
-            "working_title": f"5 lessons about {c} teams learn too late ({angle_name.lower()})",
-            "hook": f"Every one of these {c} lessons was paid for in an incident review.",
+            "format": "code deep-dive",
+            "working_title": f"{c} in runnable code: the evening deep-dive ({angle_name.lower()})",
+            "hook": f"The code behind the case study: a minimal, runnable model of {c} you can execute and verify.",
             "outline": _outline(
-                f"Five one-line lessons framed {angle_qual}, each with the consequence of ignoring it",
-                "Order them from cheap-to-fix to career-limiting",
-                "End with the earliest warning signal to watch for"),
+                f"Build a minimal runnable model of {c} from the morning's case study",
+                "Annotate the two lines people get wrong",
+                "State the expected output so readers can self-verify"),
         }
     elif day_name == "Thursday":
         c = concepts[3]
@@ -629,6 +629,56 @@ def validate(rows: list[dict]) -> None:
     assert all(v == 14 for v in per_week.values()), "weeks 1-100 must have 14 posts each"
 
 
+PUBLISHING_FORMAT = """\
+## Publishing format (effective 2026-08-24, week 1 onward)
+
+Platform is Substack, not LinkedIn. Each calendar day produces three artifacts,
+not one post per slot:
+
+### Human-first voice (required)
+
+Every reader-facing essay and follow-up must feel like a conversation with a
+thoughtful person, not a detached technical reference. Open with a natural
+greeting, check-in, or familiar everyday moment. Carry that relationship
+through every major section with reader-facing transitions and concrete daily
+analogies; do not confine the human voice to the introduction. Explain the
+precise technical mechanism immediately after each relatable frame, without
+weakening sourced claims or numerical rigor. Close by reconnecting the lesson
+to a decision, problem, or experience the reader is likely to recognize. Keep
+the warmth natural: do not invent personal stories, force slang, or repeat the
+same greeting mechanically.
+
+- **09:00 - the essay.** A full long-form Substack essay, 2,500-3,500 words.
+  The day's `format` column (concept deep-dive, repo walkthrough, case study,
+  etc.) is not a separate short post; it is the essay's spine, the structural
+  backbone the essay is organized around. A "concept deep-dive" essay leads
+  with a plain-language definition, walks the mechanism with a concrete
+  example, and closes on the load-bearing misconception. A "case study" essay
+  leads with the scene, walks the decision and the numbers, and closes on the
+  transferable rule. The outline column in the CSV names the spine's beats;
+  the essay fills each beat out to full depth rather than one sentence.
+- **17:00 - the follow-up or code deep-dive.** Built around that day's PM
+  `format` column, same day and same underlying example as the morning, never
+  a new topic. On most days it is a short 500-700 word reinforcement of one
+  piece of the essay (an annotated diagram, a checklist, and so on). On
+  Tuesday and Wednesday the evening slot is instead a full code companion to
+  the morning's concept: Tuesday walks the real implementation line by line
+  (repo walkthrough), Wednesday builds a runnable model from the case study
+  (code deep-dive). Either way it assumes the reader has read the 09:00 essay.
+- **Teasers, one file, four platforms.** A short comment-length teaser for
+  Twitter/X, LinkedIn, Reddit, and Quora, each in that platform's native
+  voice and length convention, each linking back to the Substack essay. These
+  replace the old full-repost "publish cut": the essay lives on Substack,
+  the other platforms only ever get a hook and a link, never the full text.
+
+File naming for each day: `posts/{date}-{day}-am-essay-{slug}.md` (the
+essay), `posts/{date}-{day}-pm-followup-{slug}.md` (the buttressing
+follow-up), `posts/{date}-{day}-teasers.md` (the four-platform bundle). Each
+essay and follow-up file carries an editorial audit header (source
+verification, numbers audit) above a `---` marker; only the content below
+that marker is the reader-facing publish copy."""
+
+
 def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
     csv_path = os.path.join(out_dir, "content_calendar.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -663,6 +713,7 @@ def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
             "## How the system works",
             "",
             "- **10 pillars** drawn from `curriculum.md` (Layers 0-6) and `files.md` (28 verified repos).",
+            "- **`resources_by_week.md`**: further-reading pool for article generation, one section per calendar week, ranked from a 1,807-resource scrape (papers, code, docs, courses) against that week's theme and hooks. Generated by `mlsource/tools/build_topic_index.py`; regenerate after editing the calendar or the corpus. Coverage varies by pillar (the source scrape skews technical/research, so Career/FDE weeks return thinner matches than System Design or LLM Internals weeks) - treat it as a candidate pool to filter while writing, not a final source list.",
             "- **5 editorial passes x 20 weeks**: Foundations -> Builder's Pass -> Failure Modes -> "
             "Scale & Hardening -> Frontier & Mastery. Every pillar gets 2 weeks per pass.",
             "- **Concepts recur across passes by design** (pillar-cluster model) but never with the "
@@ -673,11 +724,13 @@ def write_outputs(rows: list[dict], out_dir: str) -> tuple[str, str]:
             "|---|---|---|",
             "| Sun | Theme kickoff | Poll |",
             "| Mon | Concept deep-dive | Annotated diagram |",
-            "| Tue | Repo walkthrough | Snippet / config tip |",
-            "| Wed | Case study | Lessons listicle |",
+            "| Tue | Concept deep-dive | Repo walkthrough |",
+            "| Wed | Case study | Code deep-dive |",
             "| Thu | Hands-on tutorial | Mistakes checklist |",
             "| Fri | Contrarian take | Debate prompt |",
             "| Sat | Recap + quiz | Weekend challenge |",
+            "",
+            PUBLISHING_FORMAT,
             "",
             "## Working the calendar",
             "",

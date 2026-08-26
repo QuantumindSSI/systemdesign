@@ -16,8 +16,8 @@ Full calendar: `content_calendar.csv` (one complete brief per post: title, hook,
 |---|---|---|
 | Sun | Theme kickoff | Poll |
 | Mon | Concept deep-dive | Annotated diagram |
-| Tue | Repo walkthrough | Snippet / config tip |
-| Wed | Case study | Lessons listicle |
+| Tue | Concept deep-dive | Repo walkthrough |
+| Wed | Case study | Code deep-dive |
 | Thu | Hands-on tutorial | Mistakes checklist |
 | Fri | Contrarian take | Debate prompt |
 | Sat | Recap + quiz | Weekend challenge |
@@ -26,6 +26,19 @@ Full calendar: `content_calendar.csv` (one complete brief per post: title, hook,
 
 Platform is Substack, not LinkedIn. Each calendar day produces three artifacts,
 not one post per slot:
+
+### Human-first voice (required)
+
+Every reader-facing essay and follow-up must feel like a conversation with a
+thoughtful person, not a detached technical reference. Open with a natural
+greeting, check-in, or familiar everyday moment. Carry that relationship
+through every major section with reader-facing transitions and concrete daily
+analogies; do not confine the human voice to the introduction. Explain the
+precise technical mechanism immediately after each relatable frame, without
+weakening sourced claims or numerical rigor. Close by reconnecting the lesson
+to a decision, problem, or experience the reader is likely to recognize. Keep
+the warmth natural: do not invent personal stories, force slang, or repeat the
+same greeting mechanically.
 
 - **09:00 - the essay.** A full long-form Substack essay, 2,500-3,500 words.
   The day's `format` column (concept deep-dive, repo walkthrough, case study,
@@ -36,13 +49,14 @@ not one post per slot:
   leads with the scene, walks the decision and the numbers, and closes on the
   transferable rule. The outline column in the CSV names the spine's beats;
   the essay fills each beat out to full depth rather than one sentence.
-- **17:00 - the follow-up.** A short 500-700 word post that buttresses the
-  morning essay: same day, same underlying example, does not introduce a new
-  topic. It is built around that day's PM `format` column exactly as before
-  (annotated diagram, snippet, listicle, and so on), just short instead of a
-  standalone LinkedIn post. It assumes the reader has read the 09:00 essay
-  and reinforces one piece of it (a diagram, a runnable snippet, a checklist)
-  rather than repeating the whole argument.
+- **17:00 - the follow-up or code deep-dive.** Built around that day's PM
+  `format` column, same day and same underlying example as the morning, never
+  a new topic. On most days it is a short 500-700 word reinforcement of one
+  piece of the essay (an annotated diagram, a checklist, and so on). On
+  Tuesday and Wednesday the evening slot is instead a full code companion to
+  the morning's concept: Tuesday walks the real implementation line by line
+  (repo walkthrough), Wednesday builds a runnable model from the case study
+  (code deep-dive). Either way it assumes the reader has read the 09:00 essay.
 - **Teasers, one file, four platforms.** A short comment-length teaser for
   Twitter/X, LinkedIn, Reddit, and Quora, each in that platform's native
   voice and length convention, each linking back to the Substack essay. These

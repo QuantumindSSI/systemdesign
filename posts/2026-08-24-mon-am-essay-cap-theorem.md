@@ -177,8 +177,9 @@ CAP tells an engineer what breaks during the outage. It says nothing about what 
 *This is Monday's 09:00 essay. Monday's 17:00 follow-up,
 `posts/2026-08-24-mon-pm-followup-cap-theorem-diagram.md`, assumes you have
 read this far and walks the same inventory example as a single annotated
-diagram. Tuesday 09:00 (consistent hashing,
-`prep/week-01/tue-2026-08-25-repo-walkthrough.md`) and Tuesday 17:00 (PACELC
-quorum snippet, `prep/week-01/tue-2026-08-25-pm-snippet.md`) both cite the
-PACELC and named-system sections above directly rather than re-deriving
-them.*
+diagram. Tuesday turns to consistent hashing rather than re-deriving this
+essay's CAP and PACELC material: the 09:00 essay
+(`posts/2026-08-25-tue-am-essay-consistent-hashing.md`) builds the mental
+model, and the 17:00 deep-dive
+(`posts/2026-08-25-tue-pm-followup-code-walkthrough.md`) walks the 79-line
+implementation line by line.*

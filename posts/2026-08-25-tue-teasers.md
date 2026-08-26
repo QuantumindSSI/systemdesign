@@ -4,12 +4,12 @@
 > ("Teasers, one file, four platforms"), this file replaces the old
 > full-repost publish cut: every platform below gets a hook and a link
 > back to Substack, never the full essay text. Two sections follow, one
-> for the 09:00 essay and one for the 17:00 follow-up.
+> for the 09:00 concept essay and one for the 17:00 code deep-dive.
 >
 > Source posts: `posts/2026-08-25-tue-am-essay-consistent-hashing.md`
-> (essay), `posts/2026-08-25-tue-pm-followup-pacelc-snippet.md`
-> (follow-up). Standards: persona-constitution (Laws I-IV) + QSSI research
-> persona (Laws I-VI) + Amendment 1.
+> (concept essay), `posts/2026-08-25-tue-pm-followup-code-walkthrough.md`
+> (evening code deep-dive). Standards: persona-constitution (Laws I-IV) +
+> QSSI research persona (Laws I-VI) + Amendment 1.
 >
 > Link placeholder: `{substack-url}` below stands for the live Substack
 > post URL. No Substack publication URL exists yet in this repo; per the
@@ -24,69 +24,70 @@
 >   r/ExperiencedDevs; states why it is being shared, not just a headline
 >   and a link, since link-only posts are typically removed as spam.
 > - Quora: framed as a direct answer opening to a question a reader would
->   plausibly have already asked ("How does consistent hashing actually...").
+>   plausibly have already asked (09:00 = "why does mod-N fall apart...";
+>   17:00 = "how is consistent hashing actually implemented...").
 >
 > Adversarial review record: no new numeric claims in this file; every
-> figure below (79 lines, S2/S5/S6/S5, 6.88x, 79.9%/19.1%, 7.7ms/16.0ms,
-> 67.0%/0.0%) is restated from the two source posts' own already-audited
-> headers, not introduced fresh here ✓. Character counts for both
-> Twitter/X posts verified below.
+> figure below (8 of 10 keys, key4/key7 stable, S2/S5/S6/S5, 6.88x/1.12x,
+> 79.9%/19.1%, 79 lines) is restated from the two source posts' own
+> already-audited headers, not introduced fresh here ✓. Character counts
+> for both Twitter/X posts verified below.
 
 ---
 
-## 09:00 essay: "Tracing the 79 Lines That Implement Consistent Hashing"
+## 09:00 concept essay: "The Mental Model for Consistent Hashing, Before the 79 Lines"
 
 ### Twitter/X
 
-Read every line of the actual consistent hashing implementation from a 40k-star repo. 79 lines, no dependencies. Traced why adding a 6th server moves one tracked key and not the other, down to the actual hash integers. {substack-url}
+Before you read a line of consistent hashing code: the one failure it exists to fix. hash(key) % N reassigns 8 of 10 keys when five servers become four. A ring moves only the leaver's share. Mental model first, code tonight. {substack-url}
 
 ### LinkedIn
 
-Most consistent hashing explanations show you a circle and wave at "the servers go around it." There is no circle in the actual code. There's a sorted list, a dictionary, and one modulo at the point of lookup.
+Most consistent hashing explainers open with a circle diagram. That's the answer shown before you've felt the problem.
 
-I read all 79 lines of a real implementation from a 40,884-star repo, ran its own worked example, then recomputed the actual 128-bit hash values to show exactly why one tracked key moved when a 6th server got added and a second one didn't move at all.
+Here's the problem first: pick a server with `hash(key) % N`, and the day you add or remove one server, the remainder changes for almost every key. Ten keys, MD5, mod 5 vs mod 4: eight of the ten get reassigned when you drop to four servers.
 
-Also measured what virtual nodes actually buy you: a 6.88x load imbalance with one node per server drops to 1.12x at 100 nodes per server, and removing one server remaps 79.9% of keys under plain mod-N versus 19.1% on the ring.
+A ring fixes exactly that, add or remove a node and only its neighbors' slice moves. This morning is the mental model; the 79-line code review is tonight, once the model is load-bearing.
 
 {substack-url}
 
 ### Reddit
 
-Got tired of consistent hashing explanations that stop at the circle diagram, so I picked a real 79-line implementation from a 40k-star repo (ashishps1/awesome-system-design-resources) and traced every line: the MD5 hash, the sorted list, the one line that turns it into a "ring." Ran the file's own example (adding/removing servers), then went further and recomputed the actual hash integers to show precisely why one key moved and another didn't. Also measured the virtual-node tradeoff instead of asserting it: 6.88x load imbalance down to 1.12x, and a 4x reduction in keys remapped when a server leaves. Sharing because I think most writeups assert the benefits of consistent hashing without ever running the numbers. {substack-url}
+Kicking off a two-part consistent hashing thread: the mental model this morning, the 79-line code walkthrough tonight. This first post is deliberately code-free, because the circle diagram everyone leads with is the answer to a question most explainers never make you feel. The question: `hash(key) % N` reshuffles almost the entire keyspace when N changes (measured: 8 of 10 keys move when five servers become four; 79.9% of 50,000 keys remap at larger scale). The ring exists to move only ~1/N instead. Also walks, at the outcome level, why adding a 6th server moves one tracked key and not another. {substack-url}
 
 ### Quora
 
-**How does consistent hashing actually decide which server owns a key, and why does adding a server only move some keys?**
+**Why does `hash(key) % N` fall apart when you add or remove a server, and how does consistent hashing fix it?**
 
-I walked through a real, runnable 79-line implementation instead of the usual circle diagram: a sorted list of hash positions plus one dictionary, with `bisect` doing binary-search lookups. Ran its own worked example (six servers, two tracked keys, then add a 7th, then remove one) and recomputed the actual hash values to show exactly why one key moved and the other didn't. Also measured the "virtual nodes" idea people mention without quantifying: load imbalance goes from 6.88x down to 1.12x, and remapping on server removal drops from 79.9% to 19.1%. Full trace here: {substack-url}
+Because the modulo has no notion of "close": change N by one and nearly every remainder changes. Concretely, hash `key0` through `key9` with MD5 and compare mod 5 versus mod 4, eight of the ten land on a different server the moment you drop from five servers to four (only `key4` and `key7` stay put). A ring fixes it by hashing servers and keys into the same space, so adding or removing a node only disturbs the slice right around it. This post is the mental model, code-free on purpose; the line-by-line implementation follows this evening. {substack-url}
 
 ---
 
-## 17:00 follow-up: "A Working Snippet for PACELC Tradeoffs"
+## 17:00 code deep-dive: "Tracing the 79 Lines That Implement Consistent Hashing"
 
 ### Twitter/X
 
-CAP only applies during a partition. PACELC covers the rest of the time: latency or consistency, every request. Measured it: quorum reads cost 2x median latency to go from 67% stale reads to zero. {substack-url}
+The code half of this morning's mental model: every line of a real consistent hashing implementation from a 40k-star repo. 79 lines, no dependencies. Why MD5 not hash(), and the one modulo that turns a sorted list into a ring. {substack-url}
 
 ### LinkedIn
 
-CAP theorem gets all the attention because it's dramatic (a partition!). PACELC is the tradeoff you actually pay for every single day, partition or not: Else, choose Latency or Consistency.
+This morning was the mental model. This is the code: all 79 lines of a real consistent hashing implementation from a 40,884-star repo.
 
-I ran a 110-line seeded simulation, three replicas, no partition anywhere, and measured both sides of that choice directly: W=1/R=1 reads at 7.7ms median but returns stale data 67.0% of the time; W=2/R=2 guarantees zero stale reads out of 50,000 operations, and pays for it with a 16.0ms median, more than double.
+There's no circle in it. There's a sorted list, a dictionary, and one modulo at the point of lookup. I ran its own worked example, then recomputed the actual 128-bit hash values to show exactly why adding a 6th server moved one tracked key and not the other.
 
-Nothing here is a partition. This is the tradeoff a fully healthy, fully connected system pays on every request.
+Also the numbers behind the virtual-node knob: 6.88x load imbalance at one node per server, 1.12x at a hundred; 79.9% of keys remapped under plain mod-N on a removal versus 19.1% on the ring.
 
 {substack-url}
 
 ### Reddit
 
-Follow-up to this morning's consistent hashing post: a short, runnable snippet that measures the other half of the Abadi PACELC framework, the "ELC" half that applies when there's no partition at all. Three replicas, seeded, no sleeping, just a virtual clock: W=1/R=1 gets you 7.7ms median reads and 67.0% stale reads; W=2/R=2 gets you zero stale reads out of 50,000 ops but a 16.0ms median, because a quorum read waits for the R-th fastest replica, not the fastest. 110 lines, stdlib only, reruns identical every time. {substack-url}
+The code half of this morning's consistent hashing post: I took a real 79-line implementation from a 40k-star repo (ashishps1/awesome-system-design-resources) and traced every line, the MD5 hash (and why not Python's own `hash()`), the sorted list, the one modulo that makes it a "ring." Ran the file's own example (add/remove servers), then recomputed the actual hash integers to show precisely why one key moved and another didn't. Measured the virtual-node tradeoff too: 6.88x imbalance down to 1.12x, and 79.9% vs 19.1% keys remapped on removal. {substack-url}
 
 ### Quora
 
-**What is PACELC and how is it different from the CAP theorem?**
+**How is consistent hashing actually implemented in real code, not just a circle diagram?**
 
-CAP only makes a claim about what happens during a network partition. PACELC (Daniel Abadi) adds the other half: Else, meaning no partition at all, you still choose Latency or Consistency on every request. I built a small seeded simulation to measure that choice instead of just naming it: with three replicas and no partition, a fast config (W=1, R=1) reads at 7.7ms median but returns stale data 67.0% of the time; a quorum config (W=2, R=2) eliminates stale reads entirely but pays 16.0ms median, more than double. Runnable snippet and full numbers here: {substack-url}
+I walked a real, runnable 79-line implementation line by line: a sorted list of hash positions plus a dictionary, with `bisect` doing binary-search lookups and one trailing modulo providing the wraparound that makes it a ring. Ran its worked example (six servers, two tracked keys, add a 7th, remove one) and recomputed the actual 128-bit values to show why one key moved and the other didn't. Includes the virtual-node numbers (6.88x imbalance down to 1.12x; 79.9% vs 19.1% remapped on removal) and the one O(n) line in `remove_server` that is an honest tradeoff, not a bug. {substack-url}
 
 ---
 

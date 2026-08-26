@@ -1,11 +1,17 @@
-# Prep · Week 1 · Wed 2026-08-26 · 09:00 · Case study
+# Prep · Week 1 · Wed 2026-08-26 · AM case study (concept) + PM code deep-dive
 
-> Calendar row: W1 Wed AM. Committed title: "Case study: consistent hashing in
-> production (foundations)". Committed outline: scene (company scale, constraint,
-> why on the critical path) | decision, implementation, the number that moved |
-> transferable rule. CSV source: github.com/karanpratapsingh/system-design
-> (concept chapter, verified in clone: README.md line 1812 "# Consistent
-> Hashing"). Case-study anchor below is primary-sourced separately.
+> Calendar rows: W1 Wed AM (case study, concept) + PM (code deep-dive). Day
+> split 2026-08-26: concept in the morning, code in the evening, matching
+> Tuesday. AM = this Dynamo case study; PM = a runnable preference-list +
+> quorum snippet (`prep/week-01/code/dynamo_quorum_snippet.py`, seed 42;
+> reproduces the AM's 7.7/16.0ms and 67.0%/0.0% quorum figures, and prints
+> preference lists off the ring). The retired lessons-listicle's five points
+> are already folded into this week's essays. Prior AM title: "Case study:
+> consistent hashing in production (foundations)". Outline: scene | decision,
+> implementation, the numbers | transferable rule. CSV source:
+> github.com/karanpratapsingh/system-design (concept chapter, verified in
+> clone: README.md line 1812 "# Consistent Hashing"); the case-study anchor
+> below is primary-sourced separately.
 
 ## The case: Dynamo at Amazon (SOSP 2007)
 

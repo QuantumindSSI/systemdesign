@@ -7,8 +7,9 @@
 > for the 09:00 essay and one for the 17:00 follow-up.
 >
 > Source posts: `posts/2026-08-26-wed-am-essay-dynamo-case-study.md`
-> (essay), `posts/2026-08-26-wed-pm-followup-consistent-hashing-lessons.md`
-> (follow-up). Standards: persona-constitution (Laws I-IV) + QSSI research
+> (concept case study),
+> `posts/2026-08-26-wed-pm-followup-dynamo-quorum-code.md` (evening code
+> deep-dive). Standards: persona-constitution (Laws I-IV) + QSSI research
 > persona (Laws I-VI) + Amendment 1.
 >
 > Link placeholder: `{substack-url}` below stands for the live Substack
@@ -24,14 +25,16 @@
 >   r/ExperiencedDevs; states why it is being shared, not just a headline
 >   and a link, since link-only posts are typically removed as spam.
 > - Quora: framed as a direct answer opening to a question a reader would
->   plausibly have already asked ("How did Amazon actually use consistent
->   hashing in production...").
+>   plausibly have already asked (09:00 = "How did Amazon actually use
+>   consistent hashing in production..."; 17:00 = "How does Dynamo decide
+>   which nodes hold a key...").
 >
 > Adversarial review record: no new numeric claims in this file; every
 > figure below ((3,2,2), 200ms p99.9, 68.9ms/30.4ms, 99.94%, 3M+ checkouts,
-> 79.9%/19.1%, 6.88x/1.12x) is restated from the two source posts' own
-> already-audited headers, not introduced fresh here ✓. Character counts
-> for both Twitter/X posts verified below.
+> 79.9%/19.1%, 6.88x/1.12x, 7.7ms/16.0ms, 67.0%/0.0%, preference lists) is
+> restated from the two source posts' own already-audited headers, not
+> introduced fresh here ✓. Character counts for both Twitter/X posts verified
+> below.
 
 ---
 
@@ -63,29 +66,31 @@ Went through the primary source, the 2007 Dynamo paper, rather than a secondhand
 
 ---
 
-## 17:00 follow-up: "Five Lessons From This Week, Each One Traceable"
+## 17:00 code deep-dive: "Dynamo on the Ring, in Runnable Code"
 
 ### Twitter/X
 
-Five lessons from three days of consistent hashing, each tied to a specific measured number, not a general impression. No.1: mod-N remapped 79.9% of keys on removal; the ring remapped 19.1%. {substack-url}
+The code behind this morning's Dynamo case study: the preference list (walk the ring for N distinct nodes) and the (3,2,2) quorum, runnable. R+W>N buys zero stale reads out of 50,000, for 2x the median latency. {substack-url}
 
 ### LinkedIn
 
-Closing out three days on consistent hashing with five lessons, each one pointing back to a specific number instead of a vibe:
+This morning was Amazon's Dynamo paper. This evening is the code: the two things Dynamo adds on top of a consistent-hash ring, both runnable in one stdlib file.
 
-mod-N remaps 79.9% of keys on a single removal, the ring remaps 19.1%. Virtual nodes cut load imbalance from 6.88x to 1.12x, but Dynamo's own production numbers still show a 10-20% gap even with tokens in place. And a single optional network hop cost Amazon 2x latency at the 99.9th percentile while barely moving the average by 2ms, which is exactly why averages are the wrong thing to tune against.
+1. The preference list, walk the ring clockwise for the first N distinct physical nodes. UserA -> [D, C, F]: if D is down when a write lands, C and F are already named as backups, in order, before anything fails.
+
+2. The quorum. (3,1,1) reads at 7.7ms but 67% come back stale; (3,2,2) satisfies R+W>N and returns zero stale reads out of 50,000, paying 16.0ms. Dynamo's common config, arrived at from the mechanism, not copied from the paper.
 
 {substack-url}
 
 ### Reddit
 
-Wrapping up this week's consistent hashing thread with five lessons, each traceable to a specific number from the last three posts rather than general advice: mod-N remaps ~80% of keys on removal vs ~19% for the ring; virtual nodes cut load imbalance 6x but don't erase it (Dynamo's own numbers show 10-20% residual imbalance); R+W>N is a per-service choice, not a universal default; sloppy quorum trades "where" a replica lives for "whether" the write happens; and p99.9 hides in the average, a single removed network hop doubled Amazon's tail latency while barely touching the mean. {substack-url}
+The code half of this morning's Dynamo post: one stdlib file that makes the two things Dynamo builds on the ring runnable. First, the preference list, walk the ring clockwise collecting the first N *distinct* physical nodes (skipping extra vnodes of a node already chosen), so a key's replicas survive a machine failure; e.g. UserA -> [D, C, F]. Second, the quorum over that list: (3,1,1) gives 7.7ms reads but 67% stale, (3,2,2) satisfies R+W>N for zero stale out of 50,000 at 16.0ms. The two lines people get wrong are annotated: the distinct-node dedup, and treating an ack as "replicated everywhere." Seed 42, reruns identical. {substack-url}
 
 ### Quora
 
-**What are the practical takeaways from studying consistent hashing and Dynamo?**
+**How does Dynamo decide which nodes hold a key, and how does it stay consistent without a single master?**
 
-Five, each tied to a specific measured number rather than a general principle: mod-N hashing remaps most of your keyspace on any node change (measured: 79.9%), virtual nodes fix most but not all of the resulting load imbalance (measured: 6.88x down to 1.12x, though Dynamo's own production data still shows 10-20% residual skew), R and W should be chosen per service rather than globally, sloppy quorum trades replica location for write availability, and percentile-based SLAs catch costs that averages hide entirely. Full writeup with the numbers behind each one: {substack-url}
+Two mechanisms on top of a consistent-hash ring, both in one runnable file. First, the preference list: from a key's position, walk the ring clockwise and take the first N distinct physical nodes (skipping extra virtual nodes of a node already picked), so the replicas are genuinely different machines, e.g. UserA -> [D, C, F]. Second, a quorum over that list: with (N,R,W) = (3,2,2), R + W > N forces every read set to overlap every write set on the newest version, a measured zero stale reads out of 50,000 versus 67% for a fast (3,1,1), at double the median latency. Runnable snippet with the numbers: {substack-url}
 
 ---
 
