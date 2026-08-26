@@ -40,6 +40,14 @@ to a decision, problem, or experience the reader is likely to recognize. Keep
 the warmth natural: do not invent personal stories, force slang, or repeat the
 same greeting mechanically.
 
+### Substack topic and subtitle (required)
+
+Immediately below the editorial `---` marker, every essay and follow-up must
+begin with `**Topic:** <clear subject>` and `**Subtitle:** <one-sentence reader
+promise>`. Make the topic specific and scannable. The subtitle must add the
+human stakes, concrete outcome, or useful tension rather than merely restating
+the topic. Both fields belong to the reader-facing publish copy.
+
 - **09:00 - the essay.** A full long-form Substack essay, 2,500-3,500 words.
   The day's `format` column (concept deep-dive, repo walkthrough, case study,
   etc.) is not a separate short post; it is the essay's spine, the structural

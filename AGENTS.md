@@ -4,6 +4,11 @@
 
 Apply this rule to every reader-facing article and follow-up under `posts/`:
 
+- Immediately below the editorial `---` marker, include a Substack-style
+  title block with exactly `**Topic:** <clear subject>` and `**Subtitle:**
+  <one-sentence reader promise>`. The topic should be specific and scannable;
+  the subtitle should add the human stakes, concrete outcome, or useful tension
+  instead of restating the topic.
 - Write as a thoughtful person speaking with the reader, not as a detached
   technical reference.
 - Open with a natural greeting, check-in, or familiar everyday moment.
@@ -17,5 +22,5 @@ Apply this rule to every reader-facing article and follow-up under `posts/`:
 - Keep the warmth natural. Do not invent personal stories, force slang, or
   repeat the same greeting mechanically.
 
-Preserve the editorial audit header above the `---` marker. The human-first
-voice applies to the reader-facing copy below that marker.
+Preserve the editorial audit header above the `---` marker. The topic,
+subtitle, and human-first voice belong to the reader-facing copy below it.

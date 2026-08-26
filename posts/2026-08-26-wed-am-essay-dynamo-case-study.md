@@ -46,6 +46,10 @@
 
 ---
 
+**Topic:** Amazon Dynamo and Consistent Hashing
+
+**Subtitle:** How Amazon kept shopping carts writable through failures—and what its production numbers teach us about replication, quorums, and tail latency.
+
 Hello, how are you? Before we get technical, picture a very ordinary moment. You are halfway through an online shop, perhaps adding coffee, a book, or something you have been meaning to buy all week. You tap **Add to cart**. You do not care which server receives the request or whether a machine in another data center has just failed. You simply expect the item to be there when you check out.
 
 That small, everyday expectation is the human story behind Dynamo. Amazon's shopping cart service has one rule that overrides almost everything else in its design: a customer adding an item to a cart can never be told no. Not because the database is slow, not because a replica is unreachable, not because, in the paper's own words, "disks are failing, network routes are flapping, or data centers are being destroyed by tornados." An always-writeable store, full stop, is the constraint, and Dynamo is the system Amazon built in 2007 to satisfy it at a scale where "add a server" and "a server disappeared" both had to be routine, boring events, not incidents.

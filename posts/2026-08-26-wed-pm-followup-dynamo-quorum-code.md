@@ -30,6 +30,10 @@
 
 ---
 
+**Topic:** Dynamo's Preference Lists and Quorums
+
+**Subtitle:** A runnable Python model of who keeps each copy, how many replicas must answer, and why stronger confidence costs latency.
+
 Hello again—how is your day going? If you read this morning's case study with a cup of coffee, this is the evening where we roll up our sleeves and make the idea move. No new grand theory, just the two questions hiding underneath every reliable shopping cart: **who keeps a copy, and how many replies are enough?**
 
 Dynamo answers those questions with a preference list, which decides which nodes hold a key, and a quorum, which decides how many of them we wait for. Here they both are, runnable in one standard-library Python file. You can read along first or run the code beside the article; either way, we will take it one small step at a time.
