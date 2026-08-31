@@ -33,13 +33,24 @@
 >   origin. The origin fetch is the symptom. Rationale is argued in the body ✓
 > - Cache-key defaults are described as vendor defaults, consistent with the
 >   morning essay's citations to the Cloudflare and CloudFront documentation ✓
-> - Word count: 586 words in the reader-facing body below the editorial `---`
->   marker, excluding the ASCII diagram fence (459 of those are the annotation
->   prose after the diagram). Within the 500-700 word PM follow-up target
->   carried over from the W1 Mon follow-up. Measured 2026-08-31, not estimated ✓
+> - Word count: 821 words in the reader-facing body below the editorial `---`
+>   marker, excluding the ASCII diagram fence. The annotation prose after the
+>   diagram is 459 words and still sits inside the 500-700 word PM follow-up
+>   target carried over from the W1 Mon follow-up. The overage is entirely the
+>   catch-up context added by the publication-gap remediation noted below, and
+>   is a deliberate exception to that target rather than scope creep.
+>   Measured 2026-09-04, not estimated ✓
 > - Diagram alignment is generated, not hand-spaced. Column audit: the edge PoP
 >   box is 10 lines at exactly 68 columns, and the upper-tier and origin boxes
 >   are 6 lines at exactly 60 columns. It will not shear in a monospace reader ✓
+> - **Publication-gap remediation (2026-09-04).** No post in this week's
+>   sequence reached readers, so every backward reference to a sibling post
+>   was a dangling reference to material nobody had seen. The body now
+>   carries the referenced substance inline instead of pointing at it:
+>   a four-sentence restatement of what a CDN is and what a cache key
+>   decides, plus the 5,917 km / 58 ms / 174 ms propagation arithmetic that
+>   makes the hit-versus-miss asymmetry concrete. Written so it reads as a reminder to a sequential reader and as
+>   sufficient context to a cold one ✓
 > - Zero em dashes.
 
 ---
@@ -50,7 +61,11 @@
 
 If you cannot draw CDN architecture, you do not understand it yet. Most of us can draw the marketing version from memory: a globe, some dots, some arrows. That drawing has never once helped anyone debug a low hit ratio, because the step that decides hit or miss is not on it.
 
-Here is the version that is. Same request from this morning's essay, two readers in London, same logo, different campaign link.
+If you did not catch this morning's essay, here is everything you need in four sentences. A CDN is a set of caching servers placed in many networks, each holding copies of responses your origin already produced. When a request arrives, the nearest one checks whether it is holding a stored response it is allowed to use for *this exact request*, and only contacts your origin when the answer is no. The definition of "this exact request" is a string called the **cache key**, assembled from pieces of the incoming request, and it is the thing that decides everything. Proximity is what you win on a hit, and on a miss a CDN is slower than no CDN, because the edge makes the same long trip your user would have made and you paid for an extra hop.
+
+That last point has a number attached, which is worth carrying into the drawing. London to Ashburn, Virginia is 5,917 km. Light in fiber covers that in about 29 ms each way, so 58 ms for a round trip, and a browser opening a fresh HTTPS connection needs three of them: one for the TCP handshake, one for the TLS 1.3 handshake, and one for the request and response. That is roughly 174 ms of pure physics before any server does any work. All of it is saved on a hit and all of it is paid on a miss.
+
+Here is the drawing. Same request as this morning, two readers in London, same logo, different campaign link.
 
 ```
    reader A, London                        reader B, London
