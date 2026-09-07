@@ -2,9 +2,18 @@
 
 > Calendar row: W2 Sat PM, 17:00 (CSV row `35:2`). Format: weekend challenge.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/karanpratapsingh/system-design (GitHub API today:
-> 45,880 stars, last push 2026-07-08, not archived). Its Indexes chapter is at
-> README.md line 1310, with dense and sparse index subsections following.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
+>
+> **Source substitution (2026-09-06).** Step 1 previously sent readers to an
+> external repository's Indexes chapter and paraphrased its dense/sparse
+> definitions. The step now states both ideas in our own words and points at
+> SQLite's own query planner documentation, which is first-party and remains
+> citable. The committed calendar beat "point to the exact starting resource"
+> is now satisfied by the exercise's own runnable starting point rather than
+> by outside reading, which is a deviation from the brief and is recorded
+> here rather than hidden.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -72,13 +81,15 @@ The second one is the point. Anyone can add an index. The skill worth ninety min
 
 No installation. `sqlite3` ships inside Python.
 
-## Step 1: read for fifteen minutes, then stop
+## Step 1: hold two ideas for fifteen minutes, then stop
 
-Open the Indexes chapter of `github.com/karanpratapsingh/system-design`. It is short and it is the right level for this.
+You do not need a textbook for this. Two ideas carry the whole exercise.
 
-Two ideas to take from it. The first is the trade, stated plainly: an index buys faster reads at the cost of increased storage and slower writes, because now you have to write the data *and* update the index. The second is the dense versus sparse distinction. A **dense** index has an entry for every row, so lookups are a straight binary search, and it costs more memory and more maintenance on every insert, update and delete. A **sparse** index has entries for only some records, so it is cheaper to maintain and cheaper in memory, and finding a row means a binary search followed by a scan across a page.
+The first is the trade, stated plainly: **an index buys faster reads at the cost of more storage and slower writes**, because every insert, update and delete now has to maintain the data and the index. Nothing about an index is free; it is a purchase, and step 4 is where you read the price tag.
 
-Notice that both of those are the same sentence in different clothes: **an index moves work from read time to write time, and how much it moves is a dial.** Hold that thought until step 4, where you get to measure it.
+The second is the dense versus sparse distinction, which is where the price tag becomes a dial. A **dense** index holds an entry for every row, so a lookup is a straight binary search to the exact record. It costs the most memory and the most maintenance, because every single write touches it. A **sparse** index holds entries for only some records, typically one per storage page. It is cheaper to hold and cheaper to maintain, and finding a row means a binary search to the right page followed by a short scan inside it. SQLite's own documentation for the query planner is the primary reference if you want the specifics of what this engine does, and `EXPLAIN QUERY PLAN`, which you will run in step 3, is how it tells you which strategy it chose.
+
+Notice that both ideas are the same sentence in different clothes: **an index moves work from read time to write time, and how much it moves is a dial.** Hold that thought until step 4, where you get to measure it.
 
 Then close the tab. Reading more will not help you now.
 
@@ -210,4 +221,4 @@ Bookmark this. You will need it at 3am someday.
 
 ---
 
-*Monday, 09:00: answers to this morning's three questions, and the start of week three.*
+*Monday, 09:00: self-attention mechanics, with answers to this morning's three questions.*

@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Fri PM, 17:00 (CSV row `33:2`). Format: debate prompt.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/ashishps1/awesome-system-design-resources.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -29,7 +31,7 @@
 >   10-second default token interval, and the 17K/s to 1.3K/s result.
 > - RFC 9111 Section 4 (request collapsing and its added-latency caveat).
 > - RFC 5861 (stale-while-revalidate, stale-if-error).
-> - `prep/week-02/code/stampede_strategies.py`, today's run: 771 to 1 origin
+> - `experiments/week-02/stampede_strategies.py`, today's run: 771 to 1 origin
 >   queries, 771 app slots unchanged against a pool of 200, serve-stale at a
 >   1.0 ms p99 holding zero slots, and 50,000 to 460 peak regenerations per
 >   second under 10% TTL jitter.

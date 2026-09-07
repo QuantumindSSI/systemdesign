@@ -8,7 +8,7 @@
 > companion video pointed at from the AM essay and the teaser bundle, not
 > a substitute for either. Title (committed): "Hands-on: load balancing
 > algorithms in under an hour." Companion file:
-> `prep/week-01/code/lb_algorithms_demo.py`.
+> `experiments/week-01/lb_algorithms_demo.py`.
 >
 > Every measured number in this plan is copied from the same verified
 > run of `lb_algorithms_demo.py` cited in
@@ -22,7 +22,7 @@
 
 ## 1. Pre-Production Checklist (do this before touching record)
 
-- [ ] Re-run `python3 prep/week-01/code/lb_algorithms_demo.py` same-day.
+- [ ] Re-run `python3 experiments/week-01/lb_algorithms_demo.py` same-day.
       Confirm the terminal output ends with `All assertions passed. Every
       number above reproduces with seed 42.` If any number in the output
       differs from the table below, stop and reconcile before recording,
@@ -240,9 +240,9 @@ tomorrow's contrarian-take title.
 
 - Title options: "I measured 5 load balancing algorithms (one is a
   trap)" or "Load balancing algorithms: measured, not explained."
-- Description: link to the systemdesign repo's
-  `prep/week-01/code/lb_algorithms_demo.py`, the
-  `ashishps1/awesome-system-design-resources` implementations folder, and
+- Description: link to this repository's
+  [`experiments/week-01/lb_algorithms_demo.py`](https://github.com/QuantumindSSI/systemdesign/blob/main/experiments/week-01/lb_algorithms_demo.py) and
+  [`lib/consistent_hashing.py`](https://github.com/QuantumindSSI/systemdesign/blob/main/lib/consistent_hashing.py), and
   the AM essay (`{substack-url}`, placeholder pending live URL). Include
   chapter timestamps matching the beats above. No hashtag stacks.
 - Cross-post: link the video from the AM essay's closing line and from

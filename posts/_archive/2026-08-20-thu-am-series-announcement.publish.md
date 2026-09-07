@@ -37,7 +37,8 @@
 
 ## 1 · Posting checklist
 
-1. Confirm github.com/QuantumindSSI/systemdesign is public. The post links it and
+1. Confirm github.com/QuantumindSSI/systemdesign is public. The post links it as
+   the plan and audit trail only, never as somewhere to read unpublished posts. It
    stakes its credibility on inspection.
 2. Text post, no poll widget, no hashtags, no @-mentions, no image.
 3. Post before 17:00 today, then publish the poll cut at 17:00 sharp.

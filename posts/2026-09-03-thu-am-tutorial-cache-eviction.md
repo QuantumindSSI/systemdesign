@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Thu AM, 09:00 (CSV row `30:2`). Format: hands-on tutorial.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/ByteByteGoHq/system-design-101.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -17,7 +19,7 @@
 > runnable material. The demo in this repository supplies the code. The repo is
 > credited for what it is, an index, and is not dressed up as an implementation.
 >
-> Companion artifact: `prep/week-02/code/cache_eviction_demo.py`, 216 lines,
+> Companion artifact: `experiments/week-02/cache_eviction_demo.py`, 216 lines,
 > committed in this repository, Python 3.8+ standard library only, seed 42.
 > A video production plan for this slot exists at
 > `prep/week-02/thu-2026-09-03-youtube-tutorial.md`; this post is the written
@@ -30,7 +32,6 @@
 > - Cache key construction is Mon 08-31 and is referenced, not re-derived.
 >
 > Sources verified 2026-09-03:
-> - `github.com/ByteByteGoHq/system-design-101`, GitHub API: 87,742 stars,
 >   last push 2025-04-04, not archived.
 > - Redis, "Key eviction" (redis.io/docs/latest/develop/reference/eviction/),
 >   fetched today. All ten policy names, the approximation rationale, the
@@ -261,7 +262,7 @@ Each of these is a real thing that happens to you:
 ## Step 5: run it and read the table
 
 ```
-python3 prep/week-02/code/cache_eviction_demo.py
+python3 experiments/week-02/cache_eviction_demo.py
 ```
 
 ```

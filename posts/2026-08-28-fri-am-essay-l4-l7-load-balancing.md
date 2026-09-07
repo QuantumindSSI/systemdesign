@@ -7,9 +7,12 @@
 > where connections terminate and which component is trusted to interpret,
 > change, log, retry, or reject application traffic.
 >
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository, and one entry in the source list
+> below quoted another. Per `AGENTS.md` neither is reproduced here or in the
+> body. The vendor documentation entries are unaffected and remain citable.
+>
 > Sources re-checked 2026-08-28:
-> - `github.com/donnemartin/system-design-primer`, "Layer 4 load balancing"
->   and "Layer 7 load balancing" sections, for the conventional definitions.
 > - Google Cloud, "Choose a load balancer," for the documented distinction
 >   between proxy and passthrough load balancing, direct server return,
 >   connection termination, and client-IP preservation. Page last updated

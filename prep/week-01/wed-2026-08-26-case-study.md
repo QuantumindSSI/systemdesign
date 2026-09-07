@@ -3,7 +3,7 @@
 > Calendar rows: W1 Wed AM (case study, concept) + PM (code deep-dive). Day
 > split 2026-08-26: concept in the morning, code in the evening, matching
 > Tuesday. AM = this Dynamo case study; PM = a runnable preference-list +
-> quorum snippet (`prep/week-01/code/dynamo_quorum_snippet.py`, seed 42;
+> quorum snippet (`experiments/week-01/dynamo_quorum_snippet.py`, seed 42;
 > reproduces the AM's 7.7/16.0ms and 67.0%/0.0% quorum figures, and prints
 > preference lists off the ring). The retired lessons-listicle's five points
 > are already folded into this week's essays. Prior AM title: "Case study:
@@ -69,7 +69,7 @@ configuration instead of architecture - the cart chooses availability, the
 catalog can choose consistency. The dial, not the default, is the design.
 
 Optionally bridge back to the measured demo: mod-N remaps 79.9% of keys on a
-5-node scale-in; the ring remaps 19.1% (seeded, `prep/week-01/code/`).
+5-node scale-in; the ring remaps 19.1% (seeded, `experiments/week-01/`).
 
 ## PM slot (17:00 lessons listicle) - five lessons, each traceable
 

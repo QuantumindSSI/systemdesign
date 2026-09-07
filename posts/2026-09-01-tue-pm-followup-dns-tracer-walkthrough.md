@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Tue PM, 17:00 (CSV row `27:2`). Format: repo walkthrough.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/binhnguyennus/awesome-scalability.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -13,22 +15,21 @@
 > Committed CTA: "Follow along - this series runs all week."
 >
 > **Format honesty note, carried forward from `prep/week-02/tue-2026-09-01-repo-walkthrough.md`.**
-> The committed CSV row asks for a file in `binhnguyennus/awesome-scalability`
-> that implements DNS resolution. No such file exists. That repository is a
+> The committed CSV row asks for a file in an external repository that
+> implements DNS resolution. No such file exists. That repository is a
 > curated index of engineering write-ups, not a codebase, and pretending
 > otherwise would be the exact failure this series is supposed to avoid. The
 > post therefore does two honest things instead of one dishonest one: it reads
 > the index as an index and says what that is worth, then walks a real
 > implementation that is committed in *this* repository at
-> `prep/week-02/code/dns_path_tracer.py`. The same resolution applies here
+> `experiments/week-02/dns_path_tracer.py`. The same resolution applies here
 > that `prep/README.md` recorded for the W1 Tuesday source mismatch.
 >
 > Sources verified 2026-09-01:
-> - `github.com/binhnguyennus/awesome-scalability`, GitHub API: 73,628 stars,
 >   last push 2026-01-04, not archived. README fetched today; DNS entries
 >   confirmed at lines 551 to 556 under the `## Availability` heading
 >   (line 515), inside the Load Balancing list.
-> - `prep/week-02/code/dns_path_tracer.py`, 187 lines, committed in this
+> - `experiments/week-02/dns_path_tracer.py`, 187 lines, committed in this
 >   repository, Python 3.8+ standard library only, no third-party imports.
 >   Every excerpt below is copied from that file unmodified.
 > - Two live runs on this machine today, both reproduced in full below.
@@ -83,9 +84,9 @@ Diagrams are easy to nod along to. So tonight we do it by hand.
 
 ## First, an honest word about tonight's repository
 
-The calendar has me pointing you at the exact file in `binhnguyennus/awesome-scalability` that implements DNS resolution, and reading it line by line.
+The calendar has me pointing you at the exact file in an outside repository that implements DNS resolution, and reading it line by line.
 
-There is no such file. That repository, 73,628 stars as of this morning and last pushed in January, is a curated index. It is a very good one. It is not a codebase, and if I dressed one of its markdown lists up as an implementation to satisfy a calendar row, you should stop reading this series.
+There is no such file. That repository is a curated index of links. It is a very good one. It is not a codebase, and if I dressed one of its markdown lists up as an implementation to satisfy a calendar row, you should stop reading this series.
 
 So let me tell you what an index like that is actually for, because it is worth something specific.
 
@@ -97,7 +98,7 @@ The code, then, has to come from somewhere else. It comes from this repository, 
 
 ## What we are building and why it is not a wrapper
 
-`prep/week-02/code/dns_path_tracer.py` does the resolution walk in the open. No DNS library. Raw packets built with `struct`, sent over UDP to port 53, parsed by hand, with recursion explicitly turned off so that no resolver anywhere will do the work on our behalf.
+[`experiments/week-02/dns_path_tracer.py`](https://github.com/QuantumindSSI/systemdesign/blob/main/experiments/week-02/dns_path_tracer.py) does the resolution walk in the open. No DNS library. Raw packets built with `struct`, sent over UDP to port 53, parsed by hand, with recursion explicitly turned off so that no resolver anywhere will do the work on our behalf.
 
 That last part is the whole point. If you call `socket.gethostbyname` you learn one thing: how long your ISP's cache took to answer. The path this morning's essay described is invisible to you, because hiding it is precisely what a recursive resolver is for.
 
@@ -258,7 +259,7 @@ That is the distinction I would ask you to carry into code review generally. A b
 
 ## Run it against something you own
 
-The whole file is committed at `prep/week-02/code/dns_path_tracer.py`. Point it at a hostname you are responsible for:
+The whole file is committed at [`experiments/week-02/dns_path_tracer.py`](https://github.com/QuantumindSSI/systemdesign/blob/main/experiments/week-02/dns_path_tracer.py). Point it at a hostname you are responsible for:
 
 ```
 python3 dns_path_tracer.py your-domain.example

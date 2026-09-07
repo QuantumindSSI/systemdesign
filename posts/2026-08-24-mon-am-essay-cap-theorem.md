@@ -4,8 +4,9 @@
 > essay's structural spine follows the calendar's "concept deep-dive" format
 > for this date). Pillar: System Design Fundamentals. Pass: Foundations.
 > Source: bytebytego.com/guides/cap-theorem-one-of-the-most-misunderstood-terms
-> (repo: github.com/ByteByteGoHq/system-design-101, verified via GitHub API
-> 2026-08-24: 87,468 stars, last push 2025-04-04, not archived).
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive, Adversarial
 > Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >
@@ -174,12 +175,8 @@ CAP tells an engineer what breaks during the outage. It says nothing about what 
 
 ---
 
-*This is Monday's 09:00 essay. Monday's 17:00 follow-up,
-`posts/2026-08-24-mon-pm-followup-cap-theorem-diagram.md`, assumes you have
+*This is Monday's 09:00 essay. Today at 17:00, the follow-up assumes you have
 read this far and walks the same inventory example as a single annotated
 diagram. Tuesday turns to consistent hashing rather than re-deriving this
-essay's CAP and PACELC material: the 09:00 essay
-(`posts/2026-08-25-tue-am-essay-consistent-hashing.md`) builds the mental
-model, and the 17:00 deep-dive
-(`posts/2026-08-25-tue-pm-followup-code-walkthrough.md`) walks the 79-line
-implementation line by line.*
+essay's CAP and PACELC material: the 09:00 essay builds the mental model, and
+the 17:00 deep-dive walks the implementation line by line.*

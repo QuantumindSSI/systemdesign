@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Tue AM, 09:00 (CSV row `26:2`). Format: concept deep-dive.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/binhnguyennus/awesome-scalability.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -28,7 +30,6 @@
 >   developed, because it is a routing-layer topic and this week is caching.
 >
 > Sources verified 2026-09-01:
-> - `github.com/binhnguyennus/awesome-scalability`, GitHub API: 73,628 stars,
 >   last push 2026-01-04, not archived. Its DNS cluster sits under the
 >   `## Availability` heading (README.md line 515) inside the Load Balancing
 >   list, lines 551 to 556: LinkedIn RUM DNS, Dropbox edge network, Dropbox
@@ -40,7 +41,7 @@
 >   below is quoted from that fetch, not from the 2026-08-22 prep notes.
 > - RFC 7871 (Client Subnet in DNS Queries, informational, May 2016) is the
 >   ECS specification the Dropbox post links to.
-> - Live measurement: `prep/week-02/code/dns_path_tracer.py` run on this
+> - Live measurement: `experiments/week-02/dns_path_tracer.py` run on this
 >   machine today. Output is used in tonight's post; the TTL figure quoted
 >   here comes from that run.
 >

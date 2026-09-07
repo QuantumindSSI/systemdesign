@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Thu PM, 17:00 (CSV row `31:2`). Format: common mistakes
 > checklist. Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/ByteByteGoHq/system-design-101.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -20,7 +22,7 @@
 >   uses the documented `evicted_keys` and `expired_keys` diagnostic reasoning
 >   and the `noeviction` error behavior.
 > - Measured rows referenced in checks 2 and 3 are from
->   `prep/week-02/code/cache_eviction_demo.py`, re-run today, all assertions
+>   `experiments/week-02/cache_eviction_demo.py`, re-run today, all assertions
 >   passing, figures identical to this morning's post.
 >
 > Adversarial review record (2026-09-03):

@@ -2,9 +2,9 @@
 
 > Calendar row: W1 Tue AM, 09:00. Format: long-form Substack essay, spine =
 > concept deep-dive. Pillar: System Design Fundamentals. Pass: Foundations.
-> Source: github.com/ashishps1/awesome-system-design-resources, file
-> `implementations/python/consistent_hashing/consistent-hashing.py` (opened
-> line by line in this evening's 17:00 code walkthrough, not here).
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive,
 > Adversarial Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >
@@ -24,7 +24,7 @@
 > - 6.88x (one position per server) and 1.12x (100 positions per server)
 >   load imbalance, and 79.9% vs 19.1% keys remapped on a single-node
 >   removal: measured by the seeded demo in this repo
->   (`prep/week-01/code/consistent_hashing_vnodes_snippet.py` and
+>   (`experiments/week-01/consistent_hashing_vnodes_snippet.py` and
 >   `lb_algorithms_demo.py`, seed 42), reproduced exactly this session ✓
 > - The S2 / S5 / S6 / S5 outcome trace: the source file's own bundled
 >   example, executed this session (`python3 consistent-hashing.py`); output
@@ -92,7 +92,4 @@ Those two gaps — no failure handling, no heterogeneous capacity — aren't ove
 MD5 beats Python's own `hash()` here, what the sorted list actually buys
 over a real circle, and the exact 128-bit arithmetic behind why UserA moved
 and UserB didn't, down to the one line in `remove_server` that is an honest
-tradeoff, not a bug, in
-`posts/2026-08-25-tue-pm-followup-code-walkthrough.md`. Tomorrow, 09:00:
-this same ring at Amazon's scale, in
-`posts/2026-08-26-wed-am-essay-dynamo-case-study.md`.*
+tradeoff, not a bug. Tomorrow, 09:00: this same ring at Amazon's scale.*

@@ -2,9 +2,9 @@
 
 > Calendar row: W2 Mon PM, 17:00 (CSV row `25:2`). Format: annotated diagram.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/karanpratapsingh/system-design (same source as this
-> morning's essay; verification stands, GitHub API 2026-08-31: 45,880 stars,
-> last push 2026-07-08, not archived).
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >

@@ -8,7 +8,7 @@
 
 ## Demo artifact (committed, runnable, verified)
 
-`prep/week-01/code/lb_algorithms_demo.py` - 277 lines, stdlib only, seed 42,
+`experiments/week-01/lb_algorithms_demo.py` - 277 lines, stdlib only, seed 42,
 runs in <5s. Five algorithms (RR, smooth WRR, least-connections, IP-hash,
 consistent-hash ring with vnodes), four measured scenarios, all assertions
 passing. Reference implementations of the same algorithms exist in

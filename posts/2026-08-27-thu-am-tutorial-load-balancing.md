@@ -4,10 +4,11 @@
 > "hands-on tutorial" spine (define the end state, numbered steps with
 > code, a verification step). Pillar: System Design Fundamentals. Pass:
 > Foundations. Companion file:
-> `prep/week-01/code/lb_algorithms_demo.py` (277 lines, stdlib only, seed
+> `experiments/week-01/lb_algorithms_demo.py` (277 lines, stdlib only, seed
 > 42). Reference implementations:
-> github.com/ashishps1/awesome-system-design-resources,
-> `implementations/python/load_balancing_algorithms/`.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive,
 > Adversarial Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >
@@ -49,7 +50,7 @@ Five backends, named `b0` through `b4`, are shared across all four scenarios, al
 
 ## Step 2: Round Robin, and the Trap Hiding Inside "Exact"
 
-`RoundRobin` is the smallest class in the file: an index that increments and wraps, `self.backends[self.i % len(self.backends)]`. Nothing else. Reference implementations of the same idea exist in `ashishps1/awesome-system-design-resources`, in a file literally named `round_robin.py.py` in that repo, double extension and all, fifteen lines, same mechanism.
+`RoundRobin` is the smallest class in the file: an index that increments and wraps, `self.backends[self.i % len(self.backends)]`. Nothing else. There is no clever version of round robin hiding somewhere; fifteen lines is the whole idea, and every implementation of it you will ever read is this same counter.
 
 Scenario 1a runs 100,000 requests through it across five equal backends. The result: exactly 20,000 requests to each backend, 20.0% apiece, zero variance. The file asserts this directly, `max(rr_counts.values()) - min(rr_counts.values()) == 0`, because with five backends and a number of requests divisible by five, round robin cannot produce anything else. It is not statistically even. It is exactly even, by construction, every time.
 
@@ -68,7 +69,7 @@ No branching, no state beyond a single counter, cyclomatic complexity of one. Th
 
 ## Step 3: Weighted Round Robin, Done Right and Done Wrong
 
-Not every backend deserves an equal share. `WEIGHTS = {"b0": 5, "b1": 4, "b2": 3, "b3": 2, "b4": 1}` says `b0` should get five times `b4`'s traffic. The naive way to implement that is to burst: give `b0` five requests in a row, then one to `b1`, one to `b2`, and so on. The reference implementation in `ashishps1/awesome-system-design-resources`, `weighted_round_robin.py`, does exactly this, and running it directly against weights `[5, 1, 1]` for three servers produces this actual sequence: `Server1, Server1, Server1, Server1, Server1, Server2, Server3`. Five requests land on the same server back to back before anything else gets a turn.
+Not every backend deserves an equal share. `WEIGHTS = {"b0": 5, "b1": 4, "b2": 3, "b3": 2, "b4": 1}` says `b0` should get five times `b4`'s traffic. The naive way to implement that is to burst: give `b0` five requests in a row, then one to `b1`, one to `b2`, and so on. The bursting version is the one people write first, and against weights `[5, 1, 1]` for three servers it produces exactly this sequence: `Server1, Server1, Server1, Server1, Server1, Server2, Server3`. Five requests land on the same server back to back before anything else gets a turn.
 
 That is correct on average and disastrous in the short term. If `Server1` is momentarily slow, five consecutive requests all pay for it before the rotation ever reaches another server. `SmoothWeightedRoundRobin`, the class in this week's demo file, fixes this with an nginx-style scoring loop instead of a burst counter: every pick, every backend's running score increases by its own weight, whichever backend has the highest score wins that pick, and the winner's score is reduced by the total weight of all backends. Four lines of logic, and the sequence it produces interleaves instead of bursting: heavier backends appear more often, but never five times consecutively when a lighter backend is due a turn soon.
 
@@ -135,7 +136,6 @@ None of these five is strictly better than the others; each one is a bet about w
 ---
 
 *This afternoon, 17:00: five yes/no checks that catch the mistakes hiding
-inside today's numbers before they ship, in
-`posts/2026-08-27-thu-pm-followup-load-balancing-mistakes.md`. Tomorrow,
-09:00: the hot take this week has been building toward, on why most advice
-about L4 vs L7 load balancing gets the tradeoff backwards.*
+inside today's numbers before they ship. Tomorrow, 09:00: the hot take this
+week has been building toward, on why most advice about L4 vs L7 load
+balancing gets the tradeoff backwards.*

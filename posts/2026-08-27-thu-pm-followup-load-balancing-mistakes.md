@@ -4,7 +4,7 @@
 > yes/no checks, screenshot-able. Pillar: System Design Fundamentals. Pass:
 > Foundations. Builds directly on this morning's
 > `posts/2026-08-27-thu-am-tutorial-load-balancing.md` and
-> `prep/week-01/code/lb_algorithms_demo.py`.
+> `experiments/week-01/lb_algorithms_demo.py`.
 >
 > Adversarial review record: every number cited below is the same,
 > already-verified figure from this morning's essay (9.99, 1.66, 79.9%,

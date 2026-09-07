@@ -1,7 +1,9 @@
 # Week 1 · Mon 2026-08-24 · 09:00 · Concept deep-dive: the CAP theorem, explained from first principles
 
 > Calendar row: W1 Mon AM. Format: concept deep-dive. Pillar: System Design
-> Fundamentals. Pass: Foundations. Source: github.com/ByteByteGoHq/system-design-101.
+> Fundamentals. Pass: Foundations. Source: withheld under the canonical source
+> rule (`AGENTS.md`, 2026-09-06); this file is a superseded draft kept for
+> history and is not publishable copy.
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive, Adversarial
 > Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >

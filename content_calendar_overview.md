@@ -22,6 +22,41 @@ Full calendar: `content_calendar.csv` (one complete brief per post: title, hook,
 | Fri | Contrarian take | Debate prompt |
 | Sat | Recap + quiz | Weekend challenge |
 
+## Canonical source rule (effective 2026-09-06)
+
+`github.com/QuantumindSSI/systemdesign` is the only code repository any article
+may reference. Every implementation, dataset, diagram source and measurement an
+article needs is authored here, committed here, and then cited by its path here
+(`lib/bpe.py`, `experiments/week-03/vocab_vs_tokens.py`). No external code
+repository appears in any file under `posts/` in any form.
+
+Papers, RFCs and first-party vendor documentation remain citable and remain
+required by the numerical grounding rule below. The `source` column in
+`content_calendar.csv` is an internal routing hint that indicates a topic area
+for brief generation; it is never a citation and never appears in an article.
+The `repo walkthrough` format (100 rows) walks our own committed code.
+
+Full statement of the rule: `AGENTS.md`.
+
+## Publication rules (effective 2026-09-06)
+
+Checked by `tools/publication_gate.py`, which exits 0 only when all four rules
+pass. Run it before every push.
+
+1. **Artifacts first, link second.** During prep, a post's public-facing
+   artifacts are written, tested and pushed, then the article embeds the
+   resolvable URL, `https://github.com/QuantumindSSI/systemdesign/blob/main/<path>`,
+   never a bare path. The gate verifies every embedded URL resolves.
+2. **No post ahead of its day.** A file under `posts/` dated later than today
+   must not be tracked by git. Write it, leave it unstaged, stage it on the day.
+3. **No read-ahead invitations.** Reader-facing copy must not tell anyone where
+   to get material early, and must not name another post's file path. Refer to
+   other posts by day and time.
+4. **No external repository under `posts/`.**
+
+Public artifact trees, linkable from articles: `lib/`, `tests/`, `data/`,
+`experiments/`, `tools/`. Internal, never citable: `prep/`.
+
 ## Publishing format (effective 2026-08-24, week 1 onward)
 
 Platform is Substack, not LinkedIn. Each calendar day produces three artifacts,
@@ -71,10 +106,12 @@ the topic. Both fields belong to the reader-facing publish copy.
   replace the old full-repost "publish cut": the essay lives on Substack,
   the other platforms only ever get a hook and a link, never the full text.
 
-File naming for each day: `posts/{date}-{day}-am-essay-{slug}.md` (the
-essay), `posts/{date}-{day}-pm-followup-{slug}.md` (the buttressing
-follow-up), `posts/{date}-{day}-teasers.md` (the four-platform bundle). Each
-essay and follow-up file carries an editorial audit header (source
+File naming follows `posts/{date}-{day}-{format-label}-{slug}.md`.
+Established format labels include `am-essay`, `am-tutorial`, `am-recap-quiz`,
+`pm-followup`, `pm-poll`, and `pm-weekend-challenge`. Keep one file per
+calendar slot and retain an established path rather than creating a generic
+alias. Teasers use `posts/{date}-{day}-teasers.md` for the four-platform
+bundle. Each AM and PM file carries an editorial audit header (source
 verification, numbers audit) above a `---` marker; only the content below
 that marker is the reader-facing publish copy.
 

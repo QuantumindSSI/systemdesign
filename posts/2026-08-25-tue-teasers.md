@@ -81,7 +81,7 @@ Also the numbers behind the virtual-node knob: 6.88x load imbalance at one node 
 
 ### Reddit
 
-The code half of this morning's consistent hashing post: I took a real 79-line implementation from a 40k-star repo (ashishps1/awesome-system-design-resources) and traced every line, the MD5 hash (and why not Python's own `hash()`), the sorted list, the one modulo that makes it a "ring." Ran the file's own example (add/remove servers), then recomputed the actual hash integers to show precisely why one key moved and another didn't. Measured the virtual-node tradeoff too: 6.88x imbalance down to 1.12x, and 79.9% vs 19.1% keys remapped on removal. {substack-url}
+The code half of this morning's consistent hashing post: 53 lines of Python, traced every line. The MD5 hash and why not Python's own `hash()`, the sorted list, and the single wraparound that makes it a "ring." Ran the example (add a server, remove a server), then recomputed the actual 128-bit integers to show precisely why one key moved and another did not. Measured the virtual-node tradeoff too: 9.04x load imbalance at one virtual node per server, down to 1.12x at a hundred, and on removal exactly the 402 keys that lived on the departing server moved and nothing else did. {substack-url}
 
 ### Quora
 

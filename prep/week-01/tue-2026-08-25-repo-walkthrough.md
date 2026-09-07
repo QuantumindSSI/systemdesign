@@ -40,7 +40,7 @@ match what ran.
    per replica: O(n) each. Fine at demo scale, a real ring keeps a tree or
    re-sorts in batch. Also `num_replicas=3` is pedagogically low.
 6. **The measured payoff** (numbers from our seeded demo,
-   `prep/week-01/code/lb_algorithms_demo.py`, seed 42): with 1 vnode per node
+   `experiments/week-01/lb_algorithms_demo.py`, seed 42): with 1 vnode per node
    the busiest/quietest node ratio is 6.88x; with 100 vnodes it is 1.12x.
    Losing 1 of 5 backends remaps 79.9% of keys under `mod N` and 19.1% on the
    ring (theory: 80% vs 20%).

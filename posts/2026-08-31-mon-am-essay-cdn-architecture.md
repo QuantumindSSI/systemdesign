@@ -2,7 +2,17 @@
 
 > Calendar row: W2 Mon AM, 09:00 (CSV row `24:2`). Format: concept deep-dive.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/karanpratapsingh/system-design.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
+>
+> **Source substitution (2026-09-06).** The "give the standard explanation its
+> best version" section previously quoted an external repository's CDN chapter.
+> It now quotes AWS directly: the "What is a CDN?" page and the CloudFront
+> Developer Guide introduction, both re-fetched 2026-09-06 (HTTP 200). Vendor
+> documentation is a first-party primary source and remains citable. The
+> substituted definition is a different sentence, so it is quoted as written
+> rather than adapted.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -26,7 +36,6 @@
 >   proof and explicitly handed to Friday.
 >
 > Sources verified 2026-08-31:
-> - `github.com/karanpratapsingh/system-design`, GitHub API: 45,880 stars,
 >   last push 2026-07-08T00:36:51Z, not archived. CDN chapter read in a fresh
 >   `--depth 1` clone at `repos/system-design/README.md`, lines 674-723
 >   (definition L676, why L682, how L688-694, push/pull L700-710,
@@ -114,11 +123,11 @@ Read that second sentence again, because it has two clauses and the industry onl
 
 ## Give the standard explanation its best version first
 
-Today's calendar source is `github.com/karanpratapsingh/system-design`, one of the better free system design references. I re-checked it this morning through the GitHub API: 45,880 stars, last pushed 2026-07-08, not archived. Its CDN chapter opens like this:
+The standard explanation is best taken from the people who sell the thing, since they have every incentive to state the benefit clearly. Amazon's own definition, from the AWS "What is a CDN?" page, re-fetched this morning:
 
-> A content delivery network (CDN) is a geographically distributed group of servers that work together to provide fast delivery of internet content.
+> A content delivery network (CDN) is a network of interconnected servers that speeds up webpage loading for data-heavy applications.
 
-And it explains the mechanism this way: to minimize the distance between visitors and the website's server, a CDN stores a cached version of its content in multiple geographical locations known as edge locations, so a visitor in the UK is served from London rather than making a full trip to a server in the USA.
+And the CloudFront developer guide describes the mechanism in the same breath as the geography: CloudFront "speeds up distribution of your static and dynamic web content" and "delivers your content through a worldwide network of data centers called edge locations." Put plainly, a visitor in the UK is served from a nearby edge location rather than making a full trip to a server in the USA.
 
 That is correct, and the physics behind it is real enough that we should put a number on it rather than waving at it.
 

@@ -7,7 +7,7 @@
 ## The snippet
 
 Committed, runnable, verified live 2026-08-22:
-`prep/week-02/code/dns_path_tracer.py` (187 lines, stdlib only, needs
+`experiments/week-02/dns_path_tracer.py` (187 lines, stdlib only, needs
 outbound UDP/53). An iterative resolver in the open: raw DNS packets built
 with `struct`, RD=0, root -> TLD -> authoritative, every hop printed with
 its RTT. It is the cold-cache path from the morning's Dropbox diagram,

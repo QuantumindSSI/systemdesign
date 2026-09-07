@@ -12,7 +12,7 @@ between the two runs below is num_replicas: how many positions each physical
 server claims on the ring.
 
 Numbers reproduce the concept essay's 6.88x / 1.12x figures because this
-uses the identical scheme as prep/week-01/code/lb_algorithms_demo.py
+uses the identical scheme as experiments/week-01/lb_algorithms_demo.py
 (scenario 1), extracted here to the single knob.
 
 Run:      python3 consistent_hashing_vnodes_snippet.py

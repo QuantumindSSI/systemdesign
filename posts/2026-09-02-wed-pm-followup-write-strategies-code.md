@@ -2,7 +2,9 @@
 
 > Calendar row: W2 Wed PM, 17:00 (CSV row `29:2`). Format: code deep-dive.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/donnemartin/system-design-primer.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -12,7 +14,7 @@
 > readers can self-verify.
 > Committed CTA: "Bookmark this; you will need it at 3am someday."
 >
-> Artifact: `prep/week-02/code/cache_write_strategies.py`, written today,
+> Artifact: `experiments/week-02/cache_write_strategies.py`, written today,
 > committed in this repository, 393 lines, Python 3.8+ standard library only,
 > no third-party imports, seed 42, runs in under one second. The load-bearing
 > excerpts are inline below and are copied from that file unmodified. Following
@@ -288,7 +290,7 @@ The first two are laws. The third is a regression check on a seed, and 28.2% is 
 ## Expected output, so you can self-verify
 
 ```
-python3 prep/week-02/code/cache_write_strategies.py
+python3 experiments/week-02/cache_write_strategies.py
 ```
 
 The last line should read:

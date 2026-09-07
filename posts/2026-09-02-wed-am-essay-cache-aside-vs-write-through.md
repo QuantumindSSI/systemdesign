@@ -2,8 +2,9 @@
 
 > Calendar row: W2 Wed AM, 09:00 (CSV row `28:2`). Format: case study.
 > Pillar: System Design Fundamentals. Pass: Foundations, part 2.
-> CSV source: github.com/donnemartin/system-design-primer (pattern
-> definitions). Case-study anchor primary-sourced separately.
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, C-08 zero em dashes, Adversarial
 > Review) + AGENTS.md human-first article voice.
 >
@@ -35,7 +36,6 @@
 >   Saab, Stafford, Tung, Venkataramani, "Scaling Memcache at Facebook",
 >   NSDI'13, pp. 385-398. Open-access PDF downloaded from usenix.org today and
 >   converted to text locally. Quotations below are from that text.
-> - `github.com/donnemartin/system-design-primer`, GitHub API: 366,941 stars,
 >   last push 2026-03-20, not archived. README fetched today. Cache-aside
 >   section at line 1203, its disadvantages at 1233 to 1236; write-through at
 >   1239, its summary at 1267, its disadvantages at 1271 to 1272. The prep

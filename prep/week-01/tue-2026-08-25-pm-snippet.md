@@ -23,7 +23,7 @@
 ## The snippet
 
 Committed, runnable, verified 2026-08-25:
-`prep/week-01/code/consistent_hashing_vnodes_snippet.py` (stdlib only,
+`experiments/week-01/consistent_hashing_vnodes_snippet.py` (stdlib only,
 seeded, finishes in ~1s). Same ring as the AM essay (MD5 hash, sorted list,
 `% len` wraparound), reduced to the single knob `num_replicas`. Same scheme
 and seed as `lb_algorithms_demo.py` scenario 1, so its numbers match the AM
@@ -93,7 +93,7 @@ CTA (committed): "Repost this so your team sees it."
 
 The originally committed PACELC snippet stays in the pack for possible reuse
 (PACELC is a recurring pillar topic, e.g. week 62), just not in this slot:
-`prep/week-01/code/pacelc_quorum_snippet.py` (110 lines, stdlib, seed 42),
+`experiments/week-01/pacelc_quorum_snippet.py` (110 lines, stdlib, seed 42),
 measured output W=1/R=1 -> 7.7ms p50 / 67.0% stale, W=2/R=2 -> 16.0ms p50 /
 0 stale. It defines and measures PACELC's ELC half; the Monday CAP essay
 already covers PACELC in prose, so the concept is not lost from the week.

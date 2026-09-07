@@ -41,7 +41,7 @@
 > - The quorum figures below (2.3ms / 6.9ms p50, 15.4ms / 28.7ms p99,
 >   66.8% / 0.0% stale) are produced by this evening's code deep-dive
 >   (`posts/2026-08-26-wed-pm-followup-dynamo-quorum-code.md`, backed by
->   `prep/week-01/code/dynamo_quorum_snippet.py`, seed 42), reproduced this
+>   `experiments/week-01/dynamo_quorum_snippet.py`, seed 42), reproduced this
 >   session; the network RTT is a modeled exponential with 10ms mean, so the
 >   millisecond figures are model outputs (the 66.8%/0% stale split is the
 >   load-bearing result); (3,2,2) itself is quoted from the paper, not
@@ -107,8 +107,7 @@ So the next time you see `hash(key) % len(servers)` in a cache or storage tier, 
 
 *This evening, 17:00: the code behind this case study, Dynamo's preference
 list and its (3,2,2) quorum, both runnable, where "return the next N owners"
-becomes nine lines and R + W > N becomes a measured zero stale reads, in
-`posts/2026-08-26-wed-pm-followup-dynamo-quorum-code.md`. Tomorrow, 09:00: a
-hands-on tutorial building and measuring five load-balancing algorithms, the
-layer that decides which request reaches which node in the first place, in
-`posts/2026-08-27-thu-am-tutorial-load-balancing.md`.*
+becomes nine lines and R + W > N becomes a measured zero stale reads.
+Tomorrow, 09:00: a hands-on tutorial building and measuring five
+load-balancing algorithms, the layer that decides which request reaches which
+node in the first place.*

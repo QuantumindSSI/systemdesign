@@ -9,7 +9,7 @@
 
 ## Demo artifact (committed, runnable, verified)
 
-`prep/week-02/code/cache_eviction_demo.py` - 216 lines, stdlib only, seed 42,
+`experiments/week-02/cache_eviction_demo.py` - 216 lines, stdlib only, seed 42,
 runs in <10s. FIFO, LRU (OrderedDict) and O(1) LFU (frequency buckets +
 min-freq pointer) behind one interface; three workloads; assertions encode
 the video's claims.

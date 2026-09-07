@@ -3,9 +3,9 @@
 > Calendar row: W1 Mon PM, 17:00. Format: annotated diagram (this follow-up's
 > structural spine, per the three-artifact-per-day model in
 > `content_calendar_overview.md`). Pillar: System Design Fundamentals.
-> Pass: Foundations. Source: github.com/ByteByteGoHq/system-design-101
-> (same repo cited in this morning's essay; verification stands, GitHub API
-> 2026-08-24: 87,468 stars, last push 2025-04-04, not archived).
+> **Canonical source rule (retrofitted 2026-09-06).** The CSV `source` column
+> for this row names an external repository. Per `AGENTS.md` that string is an
+> internal routing hint only and is not reproduced here or in the body.
 > Standards: persona-constitution (Laws I-IV, Structurally Decisive, Adversarial
 > Review) + QSSI research persona (Laws I-VI) + Amendment 1.
 >

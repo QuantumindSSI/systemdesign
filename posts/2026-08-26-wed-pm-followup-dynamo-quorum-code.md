@@ -3,7 +3,7 @@
 > Calendar row: W1 Wed PM, 17:00. Format: the evening code deep-dive of the
 > concept-AM/code-PM day split (the morning was the Dynamo case study; this
 > is its code). Pillar: System Design Fundamentals. Pass: Foundations.
-> Verified this session: `prep/week-01/code/dynamo_quorum_snippet.py`
+> Verified this session: `experiments/week-01/dynamo_quorum_snippet.py`
 > (stdlib only, seed 42) re-run directly; every number below is copied from
 > that run's actual stdout, not recalled from memory. The complete model is
 > also embedded inline under "The Runnable Model" so the article is
@@ -13,7 +13,7 @@
 > listicle; under the day split it is now the code evening for the morning's
 > Dynamo case study (`posts/2026-08-26-wed-am-essay-dynamo-case-study.md`).
 > The quorum simulation reuses the R + W > N mechanism from Tuesday's retired
-> PACELC slot (`prep/week-01/code/pacelc_quorum_snippet.py`), but its network
+> PACELC slot (`experiments/week-01/pacelc_quorum_snippet.py`), but its network
 > RTT model is now explicit and documented: an exponential distribution with
 > mean RTT_MEAN_MS = 10.0ms (a plausible same-datacenter round trip), which
 > the retired uniform model replaced. The five lessons the old listicle drew
@@ -216,7 +216,7 @@ Let's be honest about the boundary. This is a simulation under stated parameters
 
 One more honest note: the per-replica network latency used to produce the p50/p99 numbers above is a modeled choice (an exponential distribution with a 10ms mean round trip), not a measurement of any real network. The preference lists and the stale-read percentages are exact — those follow directly from the ring and quorum logic. The millisecond figures will shift if you change that latency model, and that's the point: they're there to make the shape of the tradeoff tangible, not to stand in as a benchmark.
 
-If you have five spare minutes, run the model above — or `python3 prep/week-01/code/dynamo_quorum_snippet.py`. It uses seed 42, needs nothing beyond the Python standard library, and produces identical output on every machine. Then change `NODES`, `VNODES`, `RTT_MEAN_MS`, or the `(N, R, W)` pairs and watch the preference lists and stale-read percentage move together.
+If you have five spare minutes, run the model above — or `python3 experiments/week-01/dynamo_quorum_snippet.py`. It uses seed 42, needs nothing beyond the Python standard library, and produces identical output on every machine. Then change `NODES`, `VNODES`, `RTT_MEAN_MS`, or the `(N, R, W)` pairs and watch the preference lists and stale-read percentage move together.
 
 You do not need to memorize every line tonight. Keep the two human questions: **who has a copy, and how many answers will make us confident?** The ring answers the first. The quorum answers the second. Everything else is the cost of keeping that promise when a real person taps **Add to cart**.
 
@@ -224,5 +224,4 @@ You do not need to memorize every line tonight. Keep the two human questions: **
 
 *Tomorrow, 09:00: a hands-on tutorial building and measuring five load
 balancing algorithms, the layer that decides which request reaches which
-node once the ring has already decided who is eligible, in
-`posts/2026-08-27-thu-am-tutorial-load-balancing.md`.*
+node once the ring has already decided who is eligible.*

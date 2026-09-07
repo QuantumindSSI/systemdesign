@@ -44,8 +44,10 @@
 
 1. Resolve the day-0 timing decision first. This cut assumes it runs Saturday
    22 Aug at 09:00, with the weekend-challenge cut at 17:00 the same day.
-2. Confirm github.com/QuantumindSSI/systemdesign is public. The post links it and
-   invites readers to read ahead in it.
+2. Confirm github.com/QuantumindSSI/systemdesign is public. The post links it as
+   the plan and audit trail. It must not invite anyone to consume a post before
+   that post's own day; the embargo in `tools/publication_gate.py` enforces that
+   no unpublished post is reachable there.
 3. Text post, no poll widget, no hashtags, no @-mentions, no image.
 4. Confirm the fold: the preview must end inside the hook — "…1,406 counting this
    launch week's six, all pre-registered." territory, before the table starts.
