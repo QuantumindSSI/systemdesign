@@ -29,6 +29,8 @@ are deliberately absent: they are not committed until the morning they go out.
 
 - **2026-09-06 AM** [Theme kickoff: LLM Internals and Pretraining, Foundations part 1](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-06-sun-am-theme-kickoff.md)
 - **2026-09-06 PM** [Poll: Where are you with LLM internals?](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-06-sun-pm-poll.md)
+- **2026-09-08 AM** [Long-form: One Head Has One Budget, and That Is the Whole Problem](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-08-tue-am-essay-multi-head-attention.md)
+- **2026-09-08 PM** [Follow-up: Reading All 254 Lines of Our Attention](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-08-tue-pm-followup-attention-code-walkthrough.md)
 
 ## Week 2
 
