@@ -31,6 +31,10 @@ are deliberately absent: they are not committed until the morning they go out.
 - **2026-09-06 PM** [Poll: Where are you with LLM internals?](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-06-sun-pm-poll.md)
 - **2026-09-08 AM** [Long-form: One Head Has One Budget, and That Is the Whole Problem](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-08-tue-am-essay-multi-head-attention.md)
 - **2026-09-08 PM** [Follow-up: Reading All 254 Lines of Our Attention](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-08-tue-pm-followup-attention-code-walkthrough.md)
+- **2026-09-09 AM** [Long-form: The Vocabulary Filled Up With Punctuation, and Somebody Had to Notice](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-09-wed-am-essay-bpe-tokenization-case-study.md)
+- **2026-09-09 PM** [Follow-up: Twelve Merges You Can Check by Hand, and Two Ways to Get This Wrong](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-09-wed-pm-followup-bpe-code-walkthrough.md)
+- **2026-09-10 AM** [Hands-on: Build an Embedding Layer in an Hour and Find Out It Knows Nothing](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-10-thu-am-tutorial-embedding-layers.md)
+- **2026-09-10 PM** [Follow-up: Five Checks Before You Trust Your Embedding Layer](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-10-thu-pm-followup-embedding-mistakes-checklist.md)
 
 ## Week 2
 
