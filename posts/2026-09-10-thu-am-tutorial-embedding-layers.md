@@ -33,13 +33,13 @@
 > - Every number quoted in the prose is copied from that stdout.
 > - `python3 -m unittest discover -s tests -t .`: 214 tests, OK.
 >
-> **Standing rule, not yet discharged.** `prep/README.md` requires every
+> **Standing rule, discharged 2026-09-10.** `prep/README.md` requires every
 > script to be re-run on posting day and measured numbers to be regenerated
-> rather than remembered. This post was written on 2026-09-09 for a 2026-09-10
-> slot, so that re-run is outstanding. Everything is deterministic and the md5
-> above is the expected value; if the re-run on posting day produces a
-> different one, the body's figures are stale and must be corrected before
-> this file is staged.
+> rather than remembered. Re-run performed on posting day before staging:
+> `experiments/week-03/embedding_lab.py` exited 0 with "All assertions passed"
+> and an stdout md5 of 36c23c8fab0535cbf8b49e3454e526e7, identical to the
+> value recorded on 2026-09-09. Every figure in the body is therefore current
+> and no correction was needed.
 >
 > **Two claims the assertions killed before publication on 2026-09-09,
 > recorded because the series says tests do this.** First, the lab asserted
@@ -87,7 +87,7 @@
 >   not as how position works in general ✓
 > - Six numbered steps, inside the committed 4 to 6 band ✓
 > - No external code repository is named, linked, or implied ✓
-> - Reader-facing body: 3,447 words, measured 2026-09-10 by whitespace split
+> - Reader-facing body: 3,682 words, measured 2026-09-10 by whitespace split
 >   over everything below the `---` marker ✓
 > - Zero em dashes.
 
@@ -103,7 +103,7 @@ Here is a small thing that used to bother me about the seating plan at weddings.
 
 You get a table number. That is all it is: a number. The number carries nothing about who you are, nothing about who you would enjoy sitting with, nothing about whether you are the sort of person who leaves at nine. Somebody else, holding a completely separate sheet of paper, decided what number 7 means. The number and the meaning live in different places, and the number is genuinely, completely empty until the sheet exists.
 
-That is an embedding layer, and I mean that almost literally rather than as a loose analogy. Yesterday's tokenizer produced numbers. Today we build the sheet of paper. And the part of this hour I most want you to reach is the last step, where we measure how much the sheet knows before anyone has filled it in, and the answer is a properly satisfying nothing.
+That is an embedding layer, and I mean that almost literally rather than as a loose analogy. Yesterday's tokenizer produced numbers. Today we build the sheet of paper. The part of this hour I most want you to reach is the last step, where we measure how much the sheet knows before anyone has filled it in, and the answer is a properly satisfying nothing.
 
 An hour, one file, no installs.
 
@@ -182,7 +182,7 @@ Now the table. It is a rectangle of numbers: one row per token id, each row `d_m
 
 That is an embedding layer. Read the row, copy it, return it. Everything else in this post is a consequence of those four lines.
 
-**Slow down on the two guards, because they are the whole reason this is a function rather than `weight[i]`.** The `isinstance` check rejects `True`, which Python would otherwise happily treat as 1, silently embedding a boolean as whatever token id 1 happens to be. And the range check refuses negative ids instead of letting Python's negative indexing turn id -1 into the last row of the vocabulary and hand back a completely plausible vector for an impossible token.
+**Slow down on the two guards, because they are the whole reason this is a function rather than `weight[i]`.** The `isinstance` check rejects `True`, which Python would otherwise happily treat as 1, silently embedding a boolean as whatever token id 1 happens to be. The range check refuses negative ids instead of letting Python's negative indexing turn id -1 into the last row of the vocabulary and hand back a completely plausible vector for an impossible token.
 
 Now the claim that makes an embedding table trainable at all. Here is the same operation written as arithmetic instead of as an index:
 
@@ -207,15 +207,17 @@ STEP 2: a lookup is a matrix multiplication
   largest gap between lookup and one-hot matmul: 0.000e+00
 ```
 
-Zero. Not small, zero, because the multiplication sums 1,024 products of which 1,023 are exactly 0.0 and one is exactly the value you wanted.
+Zero exactly, to the last bit, because the multiplication sums 1,024 products of which 1,023 are exactly 0.0 and one is exactly the value you wanted.
 
-This matters far more than it looks. An array index has no derivative; you cannot differentiate "the fourth item". A matrix multiplication has a very well-behaved one. Because the lookup **is** a multiplication, the embedding table is a weight matrix like any other, and the gradient it receives lands on precisely the rows that were looked up and nowhere else. That single equivalence is why the least sophisticated component in the model gets to learn.
+This matters far more than it looks. An array index has no derivative; you cannot differentiate "the fourth item". A matrix multiplication has a very well-behaved one. The lookup **is** a multiplication, which makes the embedding table a weight matrix like any other, and the gradient it receives lands on precisely the rows that were looked up and nowhere else. That single equivalence is why the least sophisticated component in the model gets to learn.
 
 Think of it as the difference between fetching a book off a shelf and taking one book's worth from every shelf at once, where every shelf but one lends you nothing. Same book in your hands. Completely different thing to reason about mathematically.
 
-## Step 3: position is a second table, not a property of the token
+## Step 3: position comes from a second table
 
-The token table cannot possibly know where a token sat, because it is indexed by id. And attention, as built earlier this week, is order-blind: permute the input rows and the output rows permute identically. So position has to come from somewhere else.
+Back to the reception for a moment. Your card carries a table number, and it carries nothing at all about when you arrived or where you stood in the queue. The seating plan was drawn before anyone walked in. Whatever the number means, it means the same thing whether you are first through the door or last.
+
+The token table has exactly that limitation, because it is indexed by id. Attention, as built earlier this week, is order-blind: permute the input rows and the output rows permute identically. Position therefore has to come from somewhere else.
 
 The answer is almost disappointingly plain. Another table, indexed by position instead of by id, added on:
 
@@ -248,9 +250,9 @@ The two numbers are identical, and that identity is the point rather than a coin
 
 **Two things to flag before moving on, because both bite later.**
 
-`max_positions` is a hard wall, not a preference. A sequence longer than the position table has no row to add, and the layer refuses rather than truncating, because truncating would be silent data loss dressed up as a successful call. That refusal is one of the reasons context windows are the numbers they are.
+`max_positions` is a hard wall. A sequence longer than the position table has no row to add, and the layer refuses rather than truncating, because truncating would be silent data loss dressed up as a successful call. That refusal is one of the reasons context windows are the numbers they are. A room with sixty seats seats sixty people, and the sixty first guest is a problem you solve at the door rather than by quietly leaving someone off the list.
 
-And adding a learned table indexed by absolute position is one scheme among several, not how position works. It has an obvious weakness: the model learns what slot 900 means only from examples that actually reached slot 900, and there are always fewer of those. Alternatives exist and tomorrow is about one of them. For today, know that this is a choice with a name.
+Adding a learned table indexed by absolute position is one scheme among several, chosen here for being the plainest one that works. It has an obvious weakness: the model learns what slot 900 means only from examples that actually reached slot 900, and there are always fewer of those. Alternatives exist and tomorrow is about one of them. For today, know that this is a choice with a name.
 
 ## Step 4: find out how much of the model is a lookup table
 
@@ -281,13 +283,13 @@ STEP 4: how much of the model is the lookup table
     1542M     1600      48    80,411,200   82,049,600           5.3%
 ```
 
-**Row one is the one to keep.** At the smallest configuration, the tables hold 39.4 million of roughly 117 million parameters. **Thirty three point seven percent of that model, before a single transformer block exists, is a lookup table.** Not attention. Not feed-forward. A table you read rows out of.
+**Row one is the one to keep.** At the smallest configuration, the tables hold 39.4 million of roughly 117 million parameters. **Thirty three point seven percent of that model, before a single transformer block exists, is a lookup table.** A third of the weights sit in rows you read out by index, while attention and the feed-forward stack share what is left.
 
 I have heard an embedding layer described as "just a lookup" in more design conversations than I can count, always in the tone reserved for things that do not need to be on the slide. A third of the model.
 
-**Row four is the one that stops it being a rule.** At 1542M the same tables are 5.3%, because `d_model` grew 2.1 times while the layer count grew 4 times, and the blocks scale with the square of the width. The table grows linearly in width. The rest grows faster. So the embedding share is not a constant of transformers, it is a property of where you are on the size curve, and it falls the whole way along it.
+**Row four is the one that stops it being a rule.** At 1542M the same tables are 5.3%, because `d_model` grew 2.1 times while the layer count grew 4 times, and the blocks scale with the square of the width. The table grows linearly in width. The rest grows faster. The embedding share is therefore a property of where you sit on the size curve, and it falls the whole way along it.
 
-One honesty note on this table. The published totals are rounded: the paper says 117M, not 117,000,000. So 33.7% inherits that rounding and the true figure is 33.7% give or take a few tenths. It does not move the argument, and pretending to more precision than the source has would be its own kind of error.
+One honesty note on this table. The published totals are rounded, since the paper says 117M rather than 117,000,000. That rounding carries into 33.7%, so the true figure is 33.7% give or take a few tenths. It does not move the argument, and pretending to more precision than the source has would be its own kind of error.
 
 The practical version of this step, and the reason it is in a tutorial rather than a footnote: if you are building something small, your vocabulary size is a first-class architectural decision competing directly with depth and width for the same budget. Doubling your vocabulary at `d_model` 768 costs another 38.6 million parameters, which at that scale is most of another five transformer blocks. At 1542M the same doubling barely registers. Same decision, completely different answer, purely because of where you are on the curve.
 
@@ -295,7 +297,7 @@ The practical version of this step, and the reason it is in a tutorial rather th
 
 At the end of the model, something has to score every token in the vocabulary. That is a `d_model` by `vocab_size` matrix, which is the same size as the embedding table.
 
-Or it is the embedding table, transposed:
+That matrix can also be the embedding table, transposed:
 
 ```python
     def tied_logits(self, hidden: Sequence[Sequence[float]]) -> Matrix:
@@ -314,7 +316,7 @@ STEP 5: tying the output projection to the input table
   which is 88.9% of this layer's own parameters
 ```
 
-Weight tying is the same table doing both jobs: read a row on the way in, score against every row on the way out. It costs zero extra parameters.
+Weight tying is the same table doing both jobs: read a row on the way in, score against every row on the way out. One sheet of paper, consulted at the door to find where you go, consulted again at the end of the night to work out whose coat is whose. It costs zero extra parameters.
 
 There is a test worth stealing for this one, because tying is very easy to wire in transposed and very hard to notice when you have:
 
@@ -352,17 +354,17 @@ STEP 6: what an untrained table does not know
 
 Three separate ways of saying the same thing, and I want all three because each closes a different escape route.
 
-**The mean matches the no-structure prediction.** For vectors of independent Gaussian components in *d* dimensions, the expected absolute cosine similarity is sqrt(2 / (pi * d)), which at width 64 is 0.0997. Measured over 44,850 pairs: 0.1003. Agreement to six parts in a thousand. There is no structure here, and that is not a hand-wave, it is a number matching its prediction.
+**The mean matches the no-structure prediction.** For vectors of independent Gaussian components in *d* dimensions, the expected absolute cosine similarity is sqrt(2 / (pi * d)), which at width 64 is 0.0997. Measured over 44,850 pairs: 0.1003. Agreement to six parts in a thousand. The claim that there is no structure here rests on a number matching its prediction, which is as close to a hand-wave as arithmetic gets.
 
 **The related pair is unremarkable.** `' cache'` against `' database'` scores +0.0063, while 95% of arbitrary pairs sit below 0.2454. Two words a human would call obviously related score lower than the vast majority of pairs picked at random.
 
-**And the nearest neighbour is a property of the seed.** At seed 42, the closest row to `' cache'` in the entire vocabulary belongs to a backtick. Change one integer, seed 43, and it becomes `' ed'`. Nothing else changed. Not the corpus, not the tokenizer, not the ids, not the architecture. One integer, and `' cache'`'s nearest neighbour in the whole vocabulary became a different token.
+**The nearest neighbour is a property of the seed.** At seed 42, the closest row to `' cache'` in the entire vocabulary belongs to a backtick. Change one integer, seed 43, and it becomes `' ed'`. Nothing else changed. Not the corpus, not the tokenizer, not the ids, not the architecture. One integer, and `' cache'`'s nearest neighbour in the whole vocabulary became a different token.
 
 Sit with the backtick for a moment. If you were shown that as output, with a chart and some confident framing, you could talk yourself into a story about it. Code contexts, technical prose, markdown formatting. The story would be entirely made of nothing.
 
-**This is why the step is here.** Untrained and randomly initialised embeddings are floating around in more places than people admit: frozen tables in a pipeline that was never fine-tuned, a component swapped out during debugging, a config where the loading path silently failed and initialised fresh. When you look at one and see structure, you are looking at the seed. Meaning is not a property of the architecture. It is a thing training puts there, and until training has run, the only honest number is 0.0997.
+**This is why the step is here.** Untrained and randomly initialised embeddings are floating around in more places than people admit: frozen tables in a pipeline that was never fine-tuned, a component swapped out during debugging, a config where the loading path silently failed and initialised fresh. When you look at one and see structure, you are looking at the seed. This is the reception hall with the cards printed and the sheet of paper still blank: every guest has a number, every number is legible, and nobody has yet decided what any of them mean. Meaning is something training puts there, and until training has run, the only honest number is 0.0997.
 
-And while we are here, the two things this layer refuses to do quietly:
+While we are here, the two things this layer refuses to do quietly:
 
 ```
     out-of-range id  -> IndexError: id 1024 at position 0 is outside [0, 1024). A tokenizer that grew special tokens after this table was sized produces exactly this.
@@ -383,7 +385,7 @@ Under two seconds. The last line should read:
 All assertions passed
 ```
 
-And these six should match exactly, because everything is seeded:
+These six should match exactly, because everything is seeded:
 
 | check | expected |
 |---|---|
@@ -402,11 +404,13 @@ Three things, in descending order of how much time they take.
 
 **Go and compute your own row one.** Take the vocabulary size, the width and the total parameter count of whatever model you are actually using, and work out the share. If it comes out above a quarter, your vocabulary is an architectural decision that is probably being made by whoever picked the tokenizer, on grounds that had nothing to do with your parameter budget.
 
-**Check your position table against your longest real input.** Not your average input. The longest one you have actually seen in production. `max_positions` is a wall, and what happens when you hit it is a decision somebody made, possibly by accident, possibly by calling something that truncates without saying so.
+**Check your position table against your longest real input.** Use the longest one you have actually seen in production rather than the average. `max_positions` is a wall, and what happens when you hit it is a decision somebody made, possibly by accident, possibly by calling something that truncates without saying so.
 
-**And stop reading meaning into vectors whose training you cannot account for.** If you cannot say what corpus put the structure there, the honest prior is 0.0997.
+**Stop reading meaning into vectors whose training you cannot account for.** If you cannot say what corpus put the structure there, the honest prior is 0.0997.
 
 The rule underneath all three is the one I would put on a wall. **An embedding table is the emptiest component in the model and the most expensive one to size wrong, and it will never tell you that you got it wrong.** A table that is too small raises. A table that is too large just quietly eats a third of your budget. A table that was never trained returns confident, plausible, entirely meaningless numbers for as long as you care to ask.
+
+Which brings me back to what actually bothered me about the seating plan. It was never the number on the card. It was that the number looked like information. You can hold it, read it, repeat it to somebody and feel entirely informed while carrying nothing at all, because the meaning was always on a separate sheet of paper that somebody else had to fill in. A fresh embedding table is that card, 50,257 times over, and 0.1003 is the measurement of exactly how much it is telling you.
 
 Save this for your next design review. Specifically, save it for the moment somebody says "it is just a lookup".
 

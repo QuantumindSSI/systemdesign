@@ -36,6 +36,45 @@ Third-party *packages* installed as tooling are not "source repositories" and
 are not banned by this rule, but prefer the Python standard library so readers
 can run artifacts with no install step.
 
+## The two repositories (effective 2026-09-10, binding)
+
+`QuantumindSSI/systemdesign` is the working repository. It holds everything:
+posts with their editorial audit headers, `prep/` working notes, `tools/`,
+`AGENTS.md`, and the content calendar. It is where articles are written and
+where the gates run.
+
+`QuantumindSSI/Technologues` is the reader-facing repository. Readers are given
+this one and only this one. It carries the articles as reader-facing copy plus
+the code needed to run them, which means `posts/`, `lib/`, `tests/`, `data/`,
+and `experiments/`. It never carries `AGENTS.md`, `prep/`, `tools/`, or
+`content_calendar.csv`.
+
+It is built by `tools/publish_public.py`, never edited by hand, because hand
+edits would drift from the working repository and could not be verified. The
+script performs three transformations and refuses to finish if any check fails:
+
+- Each post is cut to its reader-facing copy. The level-one heading survives as
+  the article title, the editorial audit block below it is discarded, and
+  everything below the first `---` marker is kept verbatim. Discarding the
+  audit block is also what removes every `prep/` reference, so those references
+  stay legal in the working repository.
+- Every embedded `systemdesign` URL is rewritten to `Technologues`, so a link a
+  reader clicks resolves inside the repository they are already reading.
+- `README.md` is regenerated as the public index.
+
+The published tree is then verified: no excluded path present, no excluded
+string surviving in published text, no unrewritten source URL, and every
+embedded link resolving to a file that exists. A failure exits non-zero and
+nothing is pushed.
+
+Publishing starts at 2026-09-10. Earlier posts and earlier weeks of
+`experiments/` are consolidated into the public repository as a separate,
+deliberate decision, by widening `--since` and `EXPERIMENT_WEEKS`.
+
+Writing continues to target the working repository. An article still embeds
+`systemdesign` URLs, and the publisher rewrites them on the way out, so the
+canonical source rule above is unchanged.
+
 ## Publication rules (effective 2026-09-06, binding, no exceptions)
 
 Enforced mechanically by `tools/publication_gate.py`. Run it before every push.
@@ -106,7 +145,58 @@ Apply this rule to every reader-facing article and follow-up under `posts/`:
 - Close by reconnecting the lesson to a decision, problem, or experience the
   reader is likely to recognize.
 - Keep the warmth natural. Do not invent personal stories, force slang, or
-  repeat the same greeting mechanically.
+  repeat the same greeting mechanically. The writer-POV rule below governs the
+  one narrow case where a first-person memory is permitted.
 
 Preserve the editorial audit header above the `---` marker. The topic,
 subtitle, and human-first voice belong to the reader-facing copy below it.
+
+## Prose style rules (binding on every article and follow-up)
+
+These seven rules apply automatically to every reader-facing rewrite and every
+new article. They are not restated per request.
+
+**1. Human-centred narrative voice.** Frame a technical explainer as prose told
+through a person's experience of the mechanism, rather than as a systems-design
+brief describing the mechanism in the abstract.
+
+**2. Writer-POV analogies, author-supplied only.** Thread the author's own
+first-person memories through the piece, mapped onto the technical concepts, in
+place of generic or hypothetical comparisons. Each analogy earns its place at
+the exact point its matching concept appears, and the frame both opens and
+closes the piece.
+
+The agent may extend, re-apply, or find new mappings for a memory the author
+has already supplied or approved. The agent may never fabricate a memory, nor
+invent the specifics of one it knows only by label. Where a piece needs a frame
+and no approved memory fits, propose candidates and wait. This is the single
+exception to "do not invent personal stories" above, and it is an exception
+only for memories that came from the author.
+
+Approved memories, with the post that uses each:
+- wedding seating card: `posts/2026-09-10-thu-am-tutorial-embedding-layers.md`,
+  `posts/2026-09-10-thu-pm-followup-embedding-mistakes-checklist.md`
+
+**3. No em dashes.** Zero, anywhere, in any piece. This restates C-08 of the
+persona constitution and carries the same zero tolerance.
+
+**4. No sentence begins with a conjunction.** "And", "But", "So", "Or",
+"Because", "Yet", and "Nor" never open a sentence, headings included. Rewrite so
+the sentence leads with its own subject.
+
+**5. No "not X, it's Y" antithesis.** Collapsed contrastive framing such as "not
+small, zero" or "not a bug, a constraint" is rewritten as a direct
+single-direction statement, so the reasoning reads as one continuous thought
+rather than a sequence of self-corrections.
+
+**6. Cognitive-flow punctuation.** Plain commas and periods carry the logic in
+sequence, cause then effect then cost. Dashes and staged reversals do not do
+that work.
+
+**7. Technical content is preserved exactly.** Code blocks, data tables, exact
+figures, and cited claims stay verbatim, or are paraphrased only lightly for
+flow. They are never altered and never invented, because they are the evidence
+the piece rests on. A style rewrite that changes a number is a failed rewrite.
+
+Rules 3, 4, and 5 are mechanically checkable and should be verified by grep over
+the reader-facing copy before any post is staged.
