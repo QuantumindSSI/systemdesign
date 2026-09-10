@@ -30,6 +30,7 @@ Exit codes: 0 success, 1 verification failure, 2 usage or IO error.
 """
 
 import argparse
+import csv
 import datetime as dt
 import os
 import re
@@ -43,6 +44,38 @@ PUBLIC_BLOB = "https://github.com/QuantumindSSI/Technologues/blob/main/"
 POSTS_DIR = "posts"
 ARCHIVE_DIR = "_archive"
 OUTPUT_README = "README.md"
+
+# Read for series structure only. The calendar's `source` column names
+# third-party repositories and is never read, so it cannot reach a reader.
+CALENDAR = "content_calendar.csv"
+
+# The launch week announces the series. It is not one of the subject pillars
+# and it is not one of the passes, so it is excluded from both summaries.
+LAUNCH_PILLAR = "Series Launch"
+
+NUMBER_WORDS = {
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    10: "ten",
+    11: "eleven",
+    12: "twelve",
+}
+WEEK_DAYS = (
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+)
 
 # Copied verbatim. lib/ is required by every experiment, data/ is read at
 # runtime by two of them, tests/ is how a reader checks the code does what the
@@ -77,6 +110,14 @@ HEADING = re.compile(r"^#\s+(?P<title>.*?)\s*$")
 SLOT_HINT = re.compile(r"\b(am|pm)\b")
 MARKER = "---"
 LINK = re.compile(re.escape(PUBLIC_BLOB) + r"([^)\s\"'`]+)")
+PART_SUFFIX = re.compile(r",\s*part\s*\d+\s*$", re.IGNORECASE)
+
+# Any GitHub reference that is not our own public repository. The canonical
+# source rule forbids naming a third-party repository to a reader, so a match
+# here is a leak rather than a style question.
+FOREIGN_REPO = re.compile(
+    r"github\.com/(?!QuantumindSSI/Technologues)[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
+)
 
 WEEK_ONE_START = dt.date(2026, 8, 17)
 DEFAULT_SINCE = dt.date(2026, 9, 10)
@@ -93,17 +134,37 @@ class Entry(NamedTuple):
     slot: str
     title: str
     name: str
-
-    @property
-    def week(self) -> int:
-        """Calendar week number, counting the first week as 1."""
-        return max(0, (self.date - WEEK_ONE_START).days // 7 + 1)
+    week: int
 
 
 def slot_of(rest: str) -> str:
     """Classify a filename tail as AM, PM, or a whole-day artifact."""
     match = SLOT_HINT.search(rest)
     return match.group(1).upper() if match else "DAY"
+
+
+def strip_internal_prefix(title: str) -> str:
+    """Drop the editorial 'Week N · Day date · time ·' prefix from a heading.
+
+    The prefix is how a post is identified against the calendar while it is
+    being written. A reader wants the article's actual title, which is
+    whatever follows the last separator.
+    """
+    parts = title.split("\u00b7")
+    return parts[-1].strip() if len(parts) > 1 else title.strip()
+
+
+def week_of(date: dt.date, weeks_by_date: Dict[str, int]) -> int:
+    """Series week for a date, preferring the calendar's own numbering.
+
+    The calendar is authoritative because its week number is what appears in
+    the articles themselves. The arithmetic fallback only runs for a date the
+    calendar does not cover, which would otherwise crash the index.
+    """
+    calendar_week = weeks_by_date.get(date.isoformat())
+    if calendar_week is not None:
+        return calendar_week
+    return max(0, (date - WEEK_ONE_START).days // 7 + 1)
 
 
 def split_reader_copy(text: str, name: str) -> Tuple[str, str]:
@@ -168,7 +229,12 @@ def collect_posts(root: str, since: dt.date, today: dt.date) -> List[str]:
     return chosen
 
 
-def publish_posts(root: str, dest: str, names: Sequence[str]) -> List[Entry]:
+def publish_posts(
+    root: str,
+    dest: str,
+    names: Sequence[str],
+    weeks_by_date: Dict[str, int],
+) -> List[Entry]:
     """Write each post's reader-facing copy into the destination tree."""
     out_dir = os.path.join(dest, POSTS_DIR)
     os.makedirs(out_dir, exist_ok=True)
@@ -180,7 +246,8 @@ def publish_posts(root: str, dest: str, names: Sequence[str]) -> List[Entry]:
                 text = handle.read()
         except OSError as exc:
             raise PublishError(f"cannot read {source}: {exc}") from exc
-        title, body = split_reader_copy(text, name)
+        raw_title, body = split_reader_copy(text, name)
+        title = strip_internal_prefix(raw_title)
         match = FILENAME.match(name)
         assert match is not None, f"{name} passed collect_posts but not FILENAME"
         document = f"# {title}\n\n{rewrite_links(body)}"
@@ -189,12 +256,14 @@ def publish_posts(root: str, dest: str, names: Sequence[str]) -> List[Entry]:
                 handle.write(document)
         except OSError as exc:
             raise PublishError(f"cannot write {name}: {exc}") from exc
+        date = dt.date.fromisoformat(match.group("date"))
         entries.append(
             Entry(
-                date=dt.date.fromisoformat(match.group("date")),
+                date=date,
                 slot=slot_of(match.group("rest")),
                 title=title,
                 name=name,
+                week=week_of(date, weeks_by_date),
             )
         )
     return entries
@@ -239,31 +308,256 @@ def walk_relative(target: str, dest: str) -> List[str]:
     return sorted(found)
 
 
-def render_public_readme(entries: Sequence[Entry]) -> str:
-    """Build the public index, grouped by week and ordered by date."""
-    lines = [
+class Series(NamedTuple):
+    """The shape of the whole series, derived from the editorial calendar.
+
+    Only structural columns are read. The calendar's `source` column is an
+    internal routing hint naming third-party repositories, and it is never
+    read here, so it cannot reach a reader.
+    """
+
+    total_posts: int
+    weeks: int
+    first_date: str
+    last_date: str
+    pillars: List[Tuple[str, int, int]]
+    passes: List[str]
+    rhythm: List[Tuple[str, str, str]]
+    weeks_by_date: Dict[str, int]
+
+
+def load_series(root: str) -> Series:
+    """Read the editorial calendar and summarise the series structure."""
+    path = os.path.join(root, CALENDAR)
+    try:
+        with open(path, encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+    except OSError as exc:
+        raise PublishError(f"cannot read {path}: {exc}") from exc
+    if not rows:
+        raise PublishError(f"{path} has no rows")
+    required = {"week", "date", "day", "slot", "pillar", "weekly_theme", "format"}
+    missing = required - set(rows[0])
+    if missing:
+        raise PublishError(f"{path} is missing columns: {sorted(missing)}")
+    return Series(
+        total_posts=len(rows),
+        weeks=max(int(row["week"]) for row in rows),
+        first_date=min(row["date"] for row in rows),
+        last_date=max(row["date"] for row in rows),
+        pillars=summarise_pillars(rows),
+        passes=summarise_passes(rows),
+        rhythm=summarise_rhythm(rows),
+        weeks_by_date={row["date"]: int(row["week"]) for row in rows},
+    )
+
+
+def summarise_pillars(rows: Sequence[Dict[str, str]]) -> List[Tuple[str, int, int]]:
+    """Return (pillar, distinct weeks, post count), ordered by first week.
+
+    The launch week is excluded. It announces the series rather than teaching
+    a subject, so counting it would report eleven pillars where there are ten.
+    """
+    first: Dict[str, int] = {}
+    weeks: Dict[str, set] = {}
+    counts: Dict[str, int] = {}
+    for row in rows:
+        pillar, week = row["pillar"], int(row["week"])
+        if pillar == LAUNCH_PILLAR:
+            continue
+        first.setdefault(pillar, week)
+        weeks.setdefault(pillar, set()).add(week)
+        counts[pillar] = counts.get(pillar, 0) + 1
+    ordered = sorted(first, key=lambda name: first[name])
+    return [(name, len(weeks[name]), counts[name]) for name in ordered]
+
+
+def summarise_passes(rows: Sequence[Dict[str, str]]) -> List[str]:
+    """Return each named pass over the pillars, in the order it runs.
+
+    A weekly theme reads "Pillar - Pass name, part N". The pass name is what
+    survives once the pillar prefix and the part suffix are removed. The launch
+    week is excluded for the same reason it is excluded from the pillars: its
+    theme names an event rather than a pass.
+    """
+    first: Dict[str, int] = {}
+    for row in rows:
+        if row["pillar"] == LAUNCH_PILLAR:
+            continue
+        theme = row["weekly_theme"]
+        if " - " not in theme:
+            continue
+        name = PART_SUFFIX.sub("", theme.split(" - ", 1)[1]).strip()
+        if name:
+            first.setdefault(name, int(row["week"]))
+    return sorted(first, key=lambda name: first[name])
+
+
+def summarise_rhythm(rows: Sequence[Dict[str, str]]) -> List[Tuple[str, str, str]]:
+    """Return (day, morning format, evening format) for a standard week."""
+    tally: Dict[Tuple[str, str], Dict[str, int]] = {}
+    for row in rows:
+        key = (row["day"], row["slot"])
+        bucket = tally.setdefault(key, {})
+        bucket[row["format"]] = bucket.get(row["format"], 0) + 1
+    rhythm: List[Tuple[str, str, str]] = []
+    for day in WEEK_DAYS:
+        morning = tally.get((day, "AM"))
+        evening = tally.get((day, "PM"))
+        if not morning or not evening:
+            continue
+        rhythm.append(
+            (
+                day,
+                max(morning, key=lambda name: morning[name]),
+                max(evening, key=lambda name: evening[name]),
+            )
+        )
+    return rhythm
+
+
+def render_header(series: Series) -> List[str]:
+    """The opening pitch: what the series is and what it commits to."""
+    return [
         "# Technologues",
         "",
-        "Long-form engineering writing, one morning piece and one evening",
-        "follow-up per day. Every article is built on code in this repository,",
-        "and every number an article quotes came out of running it.",
+        "**Agentic and machine-learning systems engineering, written from",
+        f"scratch over {series.weeks} weeks.** Two articles a day, one at 09:00",
+        "and one at 17:00, every day.",
         "",
-        "Standard library Python only. No install step:",
+        f"The full run is {series.total_posts:,} articles across {series.weeks} "
+        f"weeks, {series.first_date} to {series.last_date}.",
         "",
-        "```",
+        "The premise is that the skills behind a working agent form a",
+        "dependency graph, and that most engineers study the wrong layers of it",
+        "first. The series walks that graph from the bottom, one mechanism at a",
+        "time, building each one before discussing it.",
+        "",
+        "Every implementation an article discusses lives in this repository. It",
+        "is written here, tested here, and then read line by line in the",
+        "article. Nothing is summarised from somebody else's code. Every number",
+        "quoted in an article came out of running a file you can run too.",
+        "",
+    ]
+
+
+def render_quickstart() -> List[str]:
+    """The shortest path from clone to a reproduced number."""
+    return [
+        "## Quick start",
+        "",
+        "Python 3.8 or newer. Standard library only, so there is no install",
+        "step, no virtualenv, and no requirements file.",
+        "",
+        "```bash",
         "git clone https://github.com/QuantumindSSI/Technologues.git",
         "cd Technologues",
+        "",
+        "# reproduce a measurement quoted in an article",
         "python3 experiments/week-03/embedding_lab.py",
+        "",
+        "# check the library does what the articles claim",
         "python3 -m unittest discover -s tests -t .",
         "```",
         "",
-        "## Articles",
+        "Every experiment prints `All assertions passed` and exits 0. Anything",
+        "else is a bug, and it is worth telling me about.",
+        "",
+    ]
+
+
+def spell(count: int) -> str:
+    """Spell a small count, so prose reads naturally and cannot drift."""
+    return NUMBER_WORDS.get(count, str(count))
+
+
+def render_pillars(series: Series) -> List[str]:
+    """The subject areas the calendar rotates through."""
+    count = spell(len(series.pillars))
+    lines = [
+        f"## The {count} pillars",
+        "",
+        f"The series rotates through {count} subject areas. Each one gets a",
+        "two-week block, then hands over to the next, so no single topic runs",
+        "long enough to go stale and every topic is returned to later at",
+        "greater depth.",
+        "",
+        "| Pillar | Weeks | Articles |",
+        "|---|---:|---:|",
+    ]
+    for name, weeks, posts in series.pillars:
+        lines.append(f"| {name} | {weeks} | {posts} |")
+    lines.append("")
+    return lines
+
+
+def render_passes(series: Series) -> List[str]:
+    """The sweeps that revisit every pillar at increasing depth."""
+    count = len(series.passes)
+    lines = [
+        f"## {spell(count).capitalize()} passes over the same ground",
+        "",
+        f"Each pillar is covered {spell(count)} times, and the pass decides the",
+        "altitude. The first time through a topic asks how it works. The last",
+        "time asks what it costs at scale and where it breaks.",
+        "",
+    ]
+    for index, name in enumerate(series.passes, start=1):
+        lines.append(f"{index}. **{name}**")
+    lines.append("")
+    return lines
+
+
+def render_rhythm(series: Series) -> List[str]:
+    """The fixed weekly format rotation, so a reader knows what is coming."""
+    lines = [
+        "## The weekly rhythm",
+        "",
+        "The format of each slot is fixed, so the shape of a week is",
+        "predictable even when the subject is new.",
+        "",
+        "| Day | 09:00 | 17:00 |",
+        "|---|---|---|",
+    ]
+    for day, morning, evening in series.rhythm:
+        lines.append(f"| {day} | {morning} | {evening} |")
+    lines.append("")
+    return lines
+
+
+def render_layout() -> List[str]:
+    """What each directory is for."""
+    return [
+        "## Repository layout",
+        "",
+        "| Tree | What it holds |",
+        "|---|---|",
+        "| `posts/` | The articles, published on the day they go out |",
+        "| `lib/` | Reference implementations the articles walk through |",
+        "| `tests/` | The suite proving `lib/` behaves as described |",
+        "| `experiments/` | Runnable measurements quoted in specific articles |",
+        "| `data/` | Frozen corpora, so a quoted number stays reproducible |",
+        "",
+        "`lib/` is the durable code. `experiments/` is written per article and",
+        "left alone afterwards, so a measurement stays reproducible exactly as",
+        "it was published.",
+        "",
+    ]
+
+
+def render_articles(entries: Sequence[Entry]) -> List[str]:
+    """The published index, grouped by week and ordered by date."""
+    lines = [
+        "## Published articles",
+        "",
+        f"{len(entries)} published so far. Articles appear here on the day they",
+        "go out. Nothing is posted early.",
         "",
     ]
     by_week: Dict[int, List[Entry]] = {}
     for entry in entries:
         by_week.setdefault(entry.week, []).append(entry)
-    for week in sorted(by_week):
+    for week in sorted(by_week, reverse=True):
         lines.append(f"### Week {week}")
         lines.append("")
         for entry in sorted(by_week[week], key=lambda item: (item.date, item.slot)):
@@ -271,6 +565,50 @@ def render_public_readme(entries: Sequence[Entry]) -> str:
             url = f"{PUBLIC_BLOB}{POSTS_DIR}/{entry.name}"
             lines.append(f"- **{stamp}** [{entry.title}]({url})")
         lines.append("")
+    return lines
+
+
+def render_conventions() -> List[str]:
+    """How to read the repository, and how it is maintained."""
+    return [
+        "## How this repository is built",
+        "",
+        "This tree is generated. Articles and code are written in a working",
+        "repository and published here once the day arrives, which is why you",
+        "will not find editorial notes, drafts, or unpublished articles.",
+        "Opening a pull request against a generated file will not stick, so",
+        "raise an issue instead and the fix goes in upstream.",
+        "",
+        "Two rules the series holds itself to, and which you should hold it to:",
+        "",
+        "- **Every number names its source.** A figure is either measured by a",
+        "  file in this repository, cited to a paper or a vendor document, or",
+        "  flagged in the text as unverified. There is no fourth option.",
+        "- **Every code listing is copied from a committed file.** If an",
+        "  article shows you a function, that function exists here, is tested",
+        "  here, and runs.",
+        "",
+        "## Reproducing anything you read",
+        "",
+        "Articles quote the file they came from. Run that file and compare. The",
+        "experiments are seeded, so a given article's numbers are stable across",
+        "machines and across runs. If a number here does not reproduce for you,",
+        "that is a defect worth an issue.",
+        "",
+    ]
+
+
+def render_public_readme(entries: Sequence[Entry], series: Series) -> str:
+    """Assemble the full public README."""
+    lines: List[str] = []
+    lines.extend(render_header(series))
+    lines.extend(render_quickstart())
+    lines.extend(render_articles(entries))
+    lines.extend(render_pillars(series))
+    lines.extend(render_passes(series))
+    lines.extend(render_rhythm(series))
+    lines.extend(render_layout())
+    lines.extend(render_conventions())
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -309,6 +647,8 @@ def verify_text(dest: str, relative: str, text: str) -> List[str]:
     for banned in FORBIDDEN_TEXT:
         if banned in text:
             problems.append(f"{relative}: references excluded material '{banned}'")
+    for foreign in sorted(set(FOREIGN_REPO.findall(text))):
+        problems.append(f"{relative}: names a third-party repository '{foreign}'")
     for target in LINK.findall(text):
         if not os.path.exists(os.path.join(dest, target)):
             problems.append(f"{relative}: link to missing path '{target}'")
@@ -361,12 +701,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 raise PublishError(
                     f"no posts dated between {since} and {today}; nothing to publish"
                 )
-            entries = publish_posts(args.root, args.dest, names)
+            series = load_series(args.root)
+            entries = publish_posts(args.root, args.dest, names, series.weeks_by_date)
             files = copy_code(args.root, args.dest)
             readme = os.path.join(args.dest, OUTPUT_README)
             with open(readme, "w", encoding="utf-8") as handle:
-                handle.write(render_public_readme(entries))
-            print(f"published {len(entries)} post(s) and {len(files)} code file(s)")
+                handle.write(render_public_readme(entries, series))
+            print(
+                f"published {len(entries)} post(s), {len(files)} code file(s), "
+                f"README covering {series.total_posts} planned articles"
+            )
     except PublishError as exc:
         print(f"publish failed: {exc}", file=sys.stderr)
         return 2

@@ -188,18 +188,140 @@ class TestVerifyTree(unittest.TestCase):
         self.assertTrue(any("missing path" in p for p in problems), problems)
 
 
+CALENDAR_ROWS = [
+    "week,date,day,slot,time,pillar,weekly_theme,format,source",
+    '1,2026-08-23,Sunday,AM,09:00,System Design,"System Design - Foundations, part 1",theme kickoff,github.com/other/repo',
+    '1,2026-08-23,Sunday,PM,17:00,System Design,"System Design - Foundations, part 1",poll,github.com/other/repo',
+    '3,2026-09-06,Monday,AM,09:00,LLM Internals,"LLM Internals - Foundations, part 1",concept deep-dive,github.com/other/repo',
+    '3,2026-09-06,Monday,PM,17:00,LLM Internals,"LLM Internals - Foundations, part 1",annotated diagram,github.com/other/repo',
+    '21,2027-01-17,Sunday,AM,09:00,System Design,"System Design - Builder\'s Pass, part 1",theme kickoff,github.com/other/repo',
+    '21,2027-01-17,Sunday,PM,17:00,System Design,"System Design - Builder\'s Pass, part 1",poll,github.com/other/repo',
+]
+
+
+def write_calendar(root):
+    """Write a miniature calendar whose source column names a foreign repo."""
+    path = os.path.join(root, "content_calendar.csv")
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(CALENDAR_ROWS) + "\n")
+    return path
+
+
+class TestLoadSeries(unittest.TestCase):
+    """Series structure is derived, never hand-maintained, never invented."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        write_calendar(self.root)
+        self.series = pub.load_series(self.root)
+
+    def test_totals_come_from_the_calendar(self):
+        self.assertEqual(self.series.total_posts, 6)
+        self.assertEqual(self.series.weeks, 21)
+        self.assertEqual(self.series.first_date, "2026-08-23")
+        self.assertEqual(self.series.last_date, "2027-01-17")
+
+    def test_pillars_are_ordered_by_first_week_with_counts(self):
+        self.assertEqual(
+            self.series.pillars,
+            [("System Design", 2, 4), ("LLM Internals", 1, 2)],
+        )
+
+    def test_passes_drop_the_part_suffix_and_keep_run_order(self):
+        self.assertEqual(self.series.passes, ["Foundations", "Builder's Pass"])
+
+    def test_rhythm_pairs_morning_and_evening_by_day(self):
+        self.assertIn(("Sunday", "theme kickoff", "poll"), self.series.rhythm)
+        self.assertIn(
+            ("Monday", "concept deep-dive", "annotated diagram"), self.series.rhythm
+        )
+
+    def test_missing_calendar_is_an_error(self):
+        with self.assertRaises(pub.PublishError):
+            pub.load_series(tempfile.mkdtemp())
+
+    def test_calendar_missing_columns_is_an_error(self):
+        bad = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, bad, True)
+        with open(os.path.join(bad, "content_calendar.csv"), "w") as handle:
+            handle.write("week,date\n1,2026-08-23\n")
+        with self.assertRaises(pub.PublishError):
+            pub.load_series(bad)
+
+
 class TestRenderPublicReadme(unittest.TestCase):
-    def test_entries_are_grouped_by_week_and_linked_publicly(self):
-        entries = [
-            pub.Entry(dt.date(2026, 9, 10), "AM", "Morning piece", "a.md"),
-            pub.Entry(dt.date(2026, 9, 10), "PM", "Evening piece", "b.md"),
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        write_calendar(self.root)
+        self.series = pub.load_series(self.root)
+        self.entries = [
+            pub.Entry(dt.date(2026, 9, 10), "AM", "Morning piece", "a.md", 3),
+            pub.Entry(dt.date(2026, 9, 10), "PM", "Evening piece", "b.md", 3),
         ]
-        text = pub.render_public_readme(entries)
-        self.assertIn("### Week 4", text)
-        self.assertIn(f"{pub.PUBLIC_BLOB}posts/a.md", text)
-        self.assertIn("Morning piece", text)
-        self.assertIn("Evening piece", text)
-        self.assertNotIn(pub.SOURCE_BLOB, text)
+        self.text = pub.render_public_readme(self.entries, self.series)
+
+    def test_published_articles_are_listed_and_linked_publicly(self):
+        self.assertIn("### Week 3", self.text)
+        self.assertIn(f"{pub.PUBLIC_BLOB}posts/a.md", self.text)
+        self.assertIn("Morning piece", self.text)
+        self.assertIn("Evening piece", self.text)
+
+    def test_readme_describes_the_whole_series_not_only_published_work(self):
+        for expected in (
+            "pillars",
+            "passes over the same ground",
+            "## The weekly rhythm",
+            "## Repository layout",
+            "## Quick start",
+            "## Published articles",
+            "## Reproducing anything you read",
+        ):
+            self.assertIn(expected, self.text)
+
+    def test_week_count_in_the_header_is_derived_not_hardcoded(self):
+        self.assertIn(f"{self.series.weeks} weeks", self.text)
+        self.assertNotIn("100 weeks", self.text)
+
+    def test_pillars_and_passes_reach_the_page(self):
+        self.assertIn("System Design", self.text)
+        self.assertIn("LLM Internals", self.text)
+        self.assertIn("Builder's Pass", self.text)
+
+    def test_planned_total_is_stated_not_only_the_published_count(self):
+        self.assertIn("6 articles", self.text)
+
+    def test_launch_week_is_counted_as_neither_a_pillar_nor_a_pass(self):
+        rows = CALENDAR_ROWS + [
+            '0,2026-08-20,Thursday,AM,09:00,Series Launch,'
+            '"Launch - consolidation before week 1",series announcement,x',
+        ]
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        with open(os.path.join(root, "content_calendar.csv"), "w") as handle:
+            handle.write("\n".join(rows) + "\n")
+        series = pub.load_series(root)
+        self.assertNotIn(
+            "Series Launch", [name for name, _, _ in series.pillars]
+        )
+        self.assertNotIn("consolidation before week 1", series.passes)
+
+    def test_counts_in_prose_match_the_derived_lists(self):
+        self.assertIn(f"## The {pub.spell(len(self.series.pillars))} pillars", self.text)
+        self.assertIn(
+            f"## {pub.spell(len(self.series.passes)).capitalize()} passes", self.text
+        )
+
+    def test_no_source_repository_url_reaches_the_readme(self):
+        self.assertNotIn(pub.SOURCE_BLOB, self.text)
+
+    def test_calendar_source_column_never_reaches_the_readme(self):
+        self.assertNotIn("other/repo", self.text)
+        self.assertEqual(pub.FOREIGN_REPO.findall(self.text), [])
+
+    def test_no_em_dashes(self):
+        self.assertNotIn("\u2014", self.text)
 
 
 class TestEndToEnd(unittest.TestCase):
@@ -222,6 +344,7 @@ class TestEndToEnd(unittest.TestCase):
         self.put("prep/README.md", "internal notes\n")
         self.put("AGENTS.md", "internal rules\n")
         self.put("posts/2026-09-10-thu-am-tutorial.md", POST)
+        write_calendar(self.root)
 
     def put(self, relative, text):
         with open(os.path.join(self.root, relative), "w", encoding="utf-8") as handle:
@@ -275,8 +398,14 @@ class TestEndToEnd(unittest.TestCase):
             text = handle.read()
         self.assertNotIn("Calendar row", text)
         self.assertNotIn("prep/README.md", text)
-        self.assertTrue(text.startswith("# Week 3 · Thu 2026-09-10"), text[:40])
         self.assertIn("**Topic:**", text)
+
+    def test_published_title_drops_the_internal_week_and_slot_prefix(self):
+        self.run_publisher()
+        path = os.path.join(self.dest, "posts", "2026-09-10-thu-am-tutorial.md")
+        with open(path, encoding="utf-8") as handle:
+            first = handle.readline().strip()
+        self.assertEqual(first, "# Hands-on: Build an Embedding Layer")
 
     def test_published_post_links_to_the_public_repository(self):
         self.run_publisher()
