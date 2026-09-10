@@ -2,7 +2,29 @@
 
 import unittest
 
-from lib.bpe import BYTE_VOCAB_SIZE, BPETokenizer, pre_tokenize
+from lib.bpe import (
+    BYTE_VOCAB_SIZE,
+    BPETokenizer,
+    char_category,
+    pre_tokenize,
+    pre_tokenize_categories,
+    pre_tokenize_lines,
+)
+
+# Every pre-tokenizer must be lossless on every one of these.
+LOSSLESS_CASES = (
+    "",
+    "a",
+    "a b",
+    "  leading",
+    "trailing  ",
+    "a\n\nb\t c",
+    "dog. dog! dog?",
+    "order_id=8f3a91c4 status=PENDING",
+    "caf\u00e9 na\u00efve \u4f60\u597d \U0001f600",
+    "\n",
+    "   ",
+)
 
 CORPUS = (
     "the cache expired and every request went to the database. "
@@ -33,6 +55,115 @@ class TestPreTokenize(unittest.TestCase):
     def test_rejects_non_string(self):
         with self.assertRaises(TypeError):
             pre_tokenize(b"bytes are not str")
+
+
+class TestCharCategory(unittest.TestCase):
+    def test_the_four_categories(self):
+        self.assertEqual(char_category("a"), "letter")
+        self.assertEqual(char_category("\u00e9"), "letter")
+        self.assertEqual(char_category("7"), "digit")
+        self.assertEqual(char_category(" "), "space")
+        self.assertEqual(char_category("\n"), "space")
+        self.assertEqual(char_category("!"), "other")
+        self.assertEqual(char_category("_"), "other")
+
+    def test_rejects_anything_but_one_character(self):
+        for bad in ("", "ab"):
+            with self.assertRaises(ValueError):
+                char_category(bad)
+
+
+class TestPreTokenizeLines(unittest.TestCase):
+    def test_is_lossless(self):
+        for text in LOSSLESS_CASES:
+            self.assertEqual("".join(pre_tokenize_lines(text)), text)
+
+    def test_newline_stays_with_its_line(self):
+        self.assertEqual(pre_tokenize_lines("a b\nc d\ne"), ["a b\n", "c d\n", "e"])
+
+    def test_spaces_are_not_a_boundary(self):
+        # This is the whole point of the permissive baseline: a chunk may
+        # contain a space, so a merge may learn a phrase.
+        self.assertIn(" ", pre_tokenize_lines("of the")[0])
+
+    def test_rejects_non_string(self):
+        with self.assertRaises(TypeError):
+            pre_tokenize_lines(b"bytes are not str")
+
+
+class TestPreTokenizeCategories(unittest.TestCase):
+    def test_is_lossless(self):
+        for text in LOSSLESS_CASES:
+            self.assertEqual("".join(pre_tokenize_categories(text)), text)
+
+    def test_letters_never_share_a_chunk_with_punctuation(self):
+        # The GPT-2 rule, stated as a test: "dog." is two chunks.
+        self.assertEqual(
+            pre_tokenize_categories("dog. dog! dog?"),
+            ["dog", ".", " dog", "!", " dog", "?"],
+        )
+
+    def test_single_space_attaches_forward(self):
+        self.assertEqual(pre_tokenize_categories("the cat"), ["the", " cat"])
+
+    def test_indentation_keeps_its_own_chunk(self):
+        self.assertEqual(pre_tokenize_categories("  leading"), [" ", " leading"])
+
+    def test_non_space_whitespace_does_not_attach_forward(self):
+        # The exception the paper names is for spaces, not for tabs.
+        self.assertEqual(pre_tokenize_categories("a\tb"), ["a", "\t", "b"])
+
+    def test_trailing_whitespace_has_nothing_to_attach_to(self):
+        self.assertEqual(pre_tokenize_categories("trailing  "), ["trailing", "  "])
+
+    def test_digits_split_from_letters(self):
+        self.assertEqual(pre_tokenize_categories("abc123"), ["abc", "123"])
+
+    def test_rejects_non_string(self):
+        with self.assertRaises(TypeError):
+            pre_tokenize_categories(b"bytes are not str")
+
+
+class TestPreTokenizerIsLoadBearing(unittest.TestCase):
+    def test_default_is_unchanged(self):
+        tokenizer = BPETokenizer.train(CORPUS, vocab_size=320)
+        self.assertIs(tokenizer.pre_tokenizer, pre_tokenize)
+
+    def test_tokenizer_encodes_with_the_rule_it_trained_with(self):
+        tokenizer = BPETokenizer.train(
+            CORPUS, vocab_size=320, pre_tokenizer=pre_tokenize_categories
+        )
+        self.assertIs(tokenizer.pre_tokenizer, pre_tokenize_categories)
+
+    def test_every_pre_tokenizer_round_trips(self):
+        for rule in (pre_tokenize, pre_tokenize_lines, pre_tokenize_categories):
+            tokenizer = BPETokenizer.train(CORPUS, 400, pre_tokenizer=rule)
+            for text in LOSSLESS_CASES:
+                self.assertEqual(tokenizer.decode(tokenizer.encode(text)), text)
+
+    def test_category_rule_never_merges_letters_with_punctuation(self):
+        text = "cache. cache! cache?"
+        tokenizer = BPETokenizer.train(
+            text * 40, 400, pre_tokenizer=pre_tokenize_categories
+        )
+        for piece in tokenizer.token_pieces(text):
+            has_letter = any(character.isalpha() for character in piece)
+            has_other = any(
+                not character.isalnum() and not character.isspace()
+                for character in piece
+            )
+            self.assertFalse(has_letter and has_other, piece)
+
+    def test_line_rule_can_learn_a_phrase_the_default_cannot(self):
+        text = ("of the " * 60) + "\n"
+        loose = BPETokenizer.train(text, 300, pre_tokenizer=pre_tokenize_lines)
+        strict = BPETokenizer.train(text, 300, pre_tokenizer=pre_tokenize)
+        loose_pieces = [loose.vocab[i].decode("utf-8", "replace")
+                        for i in range(BYTE_VOCAB_SIZE, loose.vocab_size)]
+        strict_pieces = [strict.vocab[i].decode("utf-8", "replace")
+                         for i in range(BYTE_VOCAB_SIZE, strict.vocab_size)]
+        self.assertTrue(any(" " in piece.strip() for piece in loose_pieces))
+        self.assertFalse(any(" " in piece.strip() for piece in strict_pieces))
 
 
 class TestTraining(unittest.TestCase):

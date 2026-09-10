@@ -25,16 +25,38 @@ Without this, the tokenizer would happily learn a single symbol for
 "the cat" and the vocabulary would fill up with phrases. This is why a
 token so often looks like a word with its leading space attached.
 
-Determinism: training is a pure function of (text, vocab_size). Ties on
-pair frequency are broken by taking the numerically smallest pair, so two
-runs on the same input produce identical merges. There is no seed because
-there is no randomness.
+Where the boundary is drawn is a real decision with a real cost, so this
+module ships three pre-tokenizers rather than hiding the choice:
+
+  `pre_tokenize_lines`       boundary at newlines only, so merges may
+                             cross spaces and learn phrases. This is the
+                             permissive baseline, kept so the cost of the
+                             other two can be measured rather than
+                             asserted.
+  `pre_tokenize`             boundary at whitespace. The default, and
+                             what every earlier week-3 artifact used.
+  `pre_tokenize_categories`  boundary at whitespace AND at letter/digit/
+                             other transitions, with a single leading
+                             space allowed to attach to the run that
+                             follows it. This is the rule Radford et al.
+                             describe for GPT-2: prevent merging across
+                             character categories, with an exception for
+                             spaces.
+
+The default is `pre_tokenize` and has not changed. Every function that
+takes a pre-tokenizer defaults to it, so results published before this
+parameter existed are reproduced exactly.
+
+Determinism: training is a pure function of (text, vocab_size,
+pre_tokenizer). Ties on pair frequency are broken by taking the
+numerically smallest pair, so two runs on the same input produce
+identical merges. There is no seed because there is no randomness.
 """
 
 import heapq
 import re
 from collections import Counter, defaultdict
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 BYTE_VOCAB_SIZE = 256
 
@@ -43,11 +65,21 @@ BYTE_VOCAB_SIZE = 256
 # every match reconstructs the input exactly, with nothing dropped.
 PRETOKEN_RE = re.compile(r"\s*\S+|\s+")
 
+# A line including its terminating newline, or a final line without one.
+# Concatenating every match reconstructs the input exactly.
+LINE_RE = re.compile(r"[^\n]*\n|[^\n]+")
+
 Pair = Tuple[int, int]
+
+# A pre-tokenizer maps text to chunks whose concatenation is that text.
+PreTokenizer = Callable[[str], List[str]]
 
 
 def pre_tokenize(text: str) -> List[str]:
     """Split text into the chunks that merges are allowed to operate inside.
+
+    Boundary rule: whitespace. A chunk is a run of non-whitespace with any
+    whitespace that precedes it attached, or a run of whitespace alone.
 
     Args:
         text: any string, including the empty string.
@@ -61,6 +93,172 @@ def pre_tokenize(text: str) -> List[str]:
     if not isinstance(text, str):
         raise TypeError(f"pre_tokenize needs a str, got {type(text).__name__}")
     return PRETOKEN_RE.findall(text)
+
+
+def pre_tokenize_lines(text: str) -> List[str]:
+    """Split text at newlines only, so merges may cross spaces.
+
+    This is the permissive baseline. With it, "of the" is a pair like any
+    other and can be merged into a single symbol, which is exactly the
+    behaviour the whitespace boundary exists to prevent. It is here so
+    that the cost of the boundary can be measured against something.
+
+    Args:
+        text: any string, including the empty string.
+
+    Returns:
+        A list of chunks whose concatenation is exactly `text`.
+
+    Raises:
+        TypeError: if `text` is not a str.
+    """
+    if not isinstance(text, str):
+        raise TypeError(f"pre_tokenize_lines needs a str, got {type(text).__name__}")
+    return LINE_RE.findall(text)
+
+
+def char_category(character: str) -> str:
+    """Classify one character as space, letter, digit or other.
+
+    These four categories are the boundaries `pre_tokenize_categories`
+    refuses to merge across. "letter" and "digit" use Python's Unicode
+    aware `str.isalpha` and `str.isdigit`, so this is not ASCII only.
+
+    Args:
+        character: a single-character string.
+
+    Returns:
+        One of "space", "letter", "digit", "other".
+
+    Raises:
+        ValueError: if `character` is not exactly one character.
+    """
+    if len(character) != 1:
+        raise ValueError(
+            f"char_category needs exactly one character, got {len(character)}"
+        )
+    if character.isspace():
+        return "space"
+    if character.isalpha():
+        return "letter"
+    if character.isdigit():
+        return "digit"
+    return "other"
+
+
+def pre_tokenize_categories(text: str) -> List[str]:
+    """Split at whitespace and at character-category transitions.
+
+    This implements the rule Radford et al. state for GPT-2: prevent BPE
+    from merging across character categories, with an exception for
+    spaces. The exception is what stops every word in running prose from
+    being split away from the space in front of it, which would cost a
+    great deal of compression for nothing.
+
+    Concretely, a chunk is a run of characters of one category, optionally
+    preceded by a single space. A run of two or more spaces is emitted as
+    its own chunk except for the last space, which attaches forward if a
+    non-space run follows. So "dog. dog!" becomes ["dog", ".", " dog",
+    "!"]: the letters never merge with the punctuation, and "dog" and
+    " dog" remain two separate chunks because the space is part of the
+    second one.
+
+    Args:
+        text: any string, including the empty string.
+
+    Returns:
+        A list of chunks whose concatenation is exactly `text`.
+
+    Raises:
+        TypeError: if `text` is not a str.
+
+    Complexity: O(len(text)), one pass.
+    """
+    if not isinstance(text, str):
+        raise TypeError(
+            f"pre_tokenize_categories needs a str, got {type(text).__name__}"
+        )
+    runs = _category_runs(text)
+    return _attach_leading_spaces(runs)
+
+
+def pre_tokenize_category_runs(text: str) -> List[str]:
+    """Split at every character-category transition, with no space exception.
+
+    This is `pre_tokenize_categories` minus the one concession the paper
+    makes, so that the value of that concession can be measured instead of
+    assumed. Here every space run is its own chunk, which means a word can
+    never be learned together with the space in front of it, and running
+    prose pays for a separate space token between every pair of words.
+
+    Args:
+        text: any string, including the empty string.
+
+    Returns:
+        A list of chunks whose concatenation is exactly `text`.
+
+    Raises:
+        TypeError: if `text` is not a str.
+
+    Complexity: O(len(text)), one pass.
+    """
+    if not isinstance(text, str):
+        raise TypeError(
+            f"pre_tokenize_category_runs needs a str, got {type(text).__name__}"
+        )
+    return _category_runs(text)
+
+
+def _category_runs(text: str) -> List[str]:
+    """Split text into maximal runs of a single character category.
+
+    Complexity: O(len(text)).
+    """
+    runs: List[str] = []
+    current: List[str] = []
+    current_category = ""
+    for character in text:
+        category = char_category(character)
+        if category != current_category and current:
+            runs.append("".join(current))
+            current = []
+        current_category = category
+        current.append(character)
+    if current:
+        runs.append("".join(current))
+    return runs
+
+
+def _attach_leading_spaces(runs: Sequence[str]) -> List[str]:
+    """Move the final space of a whitespace run onto the run that follows.
+
+    This is the "exception for spaces". A whitespace run of a single space
+    is consumed entirely; a longer one keeps its remainder as its own
+    chunk, so indentation is never silently glued to the first word of a
+    line. A whitespace run ending in a newline or a tab is left alone,
+    because the exception the paper names is for spaces.
+
+    Runs alternate in category by construction, so the run following a
+    whitespace run is never whitespace.
+
+    Complexity: O(number of runs). Terminates because `index` strictly
+    increases on every iteration.
+    """
+    chunks: List[str] = []
+    index = 0
+    total = len(runs)
+    while index < total:
+        run = runs[index]
+        followed = index + 1 < total
+        if followed and run.endswith(" ") and char_category(run[0]) == "space":
+            if len(run) > 1:
+                chunks.append(run[:-1])
+            chunks.append(" " + runs[index + 1])
+            index += 2
+            continue
+        chunks.append(run)
+        index += 1
+    return chunks
 
 
 def _merge_once(symbols: Sequence[int], pair: Pair, new_id: int) -> Tuple[int, ...]:
@@ -279,19 +477,30 @@ class BPETokenizer:
         merges: the learned merges in the order they were learned. Order
             is load-bearing: encoding replays them in exactly this order.
         vocab: maps every token id to the bytes it stands for.
+        pre_tokenizer: the boundary rule this tokenizer was trained with.
+            Encoding must use the same one, or chunks the merges were
+            never learned for will be handed to the merge table.
     """
 
-    def __init__(self, merges: Sequence[Tuple[Pair, int]]):
+    def __init__(
+        self,
+        merges: Sequence[Tuple[Pair, int]],
+        pre_tokenizer: PreTokenizer = pre_tokenize,
+    ):
         """Build a tokenizer from an ordered merge list.
 
         Args:
             merges: ordered ((left_id, right_id), new_id) triples. The
                 new ids must be consecutive starting at 256.
+            pre_tokenizer: the boundary rule. Defaults to `pre_tokenize`,
+                which is what every earlier week-3 artifact used, so the
+                default construction is unchanged.
 
         Raises:
             ValueError: if the new ids are not consecutive from 256, or a
                 merge references an id that does not exist yet.
         """
+        self.pre_tokenizer: PreTokenizer = pre_tokenizer
         self.merges: List[Tuple[Pair, int]] = [((a, b), n) for (a, b), n in merges]
         self.vocab: Dict[int, bytes] = {i: bytes([i]) for i in range(BYTE_VOCAB_SIZE)}
         expected_id = BYTE_VOCAB_SIZE
@@ -320,21 +529,31 @@ class BPETokenizer:
         return BYTE_VOCAB_SIZE + len(self.merges)
 
     @classmethod
-    def word_counts(cls, text: str) -> Counter:
+    def word_counts(
+        cls, text: str, pre_tokenizer: PreTokenizer = pre_tokenize
+    ) -> Counter:
         """Count how often each pre-token chunk occurs, as byte tuples.
 
         This is the only place the raw text is read. Everything after it
         works on word types and frequencies, which is why training cost
         scales with the vocabulary of the corpus rather than its length.
+
+        Args:
+            text: the training corpus.
+            pre_tokenizer: the boundary rule. Defaults to `pre_tokenize`.
         """
         counts: Counter = Counter()
-        for chunk in pre_tokenize(text):
+        for chunk in pre_tokenizer(text):
             counts[tuple(chunk.encode("utf-8"))] += 1
         return counts
 
     @classmethod
     def train(
-        cls, text: str, vocab_size: int, strategy: str = "indexed"
+        cls,
+        text: str,
+        vocab_size: int,
+        strategy: str = "indexed",
+        pre_tokenizer: PreTokenizer = pre_tokenize,
     ) -> "BPETokenizer":
         """Learn merges from `text` until the vocabulary reaches `vocab_size`.
 
@@ -346,6 +565,10 @@ class BPETokenizer:
             strategy: "indexed" (default, fast) or "naive" (the textbook
                 recount, kept as the correctness oracle). Both produce
                 identical merges.
+            pre_tokenizer: the boundary merges may not cross. Defaults to
+                `pre_tokenize`, the whitespace rule, so a call written
+                before this parameter existed behaves identically. The
+                returned tokenizer remembers it and encodes with it.
 
         Returns:
             A trained tokenizer.
@@ -361,7 +584,7 @@ class BPETokenizer:
             raise ValueError(
                 f"vocab_size must be at least {BYTE_VOCAB_SIZE}, got {vocab_size}"
             )
-        counts = cls.word_counts(text)
+        counts = cls.word_counts(text, pre_tokenizer)
         if strategy == "indexed":
             merges = train_merges_indexed(counts, vocab_size)
         elif strategy == "naive":
@@ -370,7 +593,7 @@ class BPETokenizer:
             raise ValueError(
                 f"strategy must be 'indexed' or 'naive', got {strategy!r}"
             )
-        return cls(merges)
+        return cls(merges, pre_tokenizer)
 
     def _encode_chunk(self, chunk: str) -> Tuple[int, ...]:
         """Encode one pre-token chunk, memoised on the chunk string.
@@ -421,7 +644,7 @@ class BPETokenizer:
         if not isinstance(text, str):
             raise TypeError(f"encode needs a str, got {type(text).__name__}")
         token_ids: List[int] = []
-        for chunk in pre_tokenize(text):
+        for chunk in self.pre_tokenizer(text):
             token_ids.extend(self._encode_chunk(chunk))
         return token_ids
 
