@@ -335,12 +335,15 @@ class TestEndToEnd(unittest.TestCase):
         for tree in ("lib", "tests", "data", "posts"):
             os.makedirs(os.path.join(self.root, tree))
         os.makedirs(os.path.join(self.root, "experiments", "week-03"))
+        os.makedirs(os.path.join(self.root, "experiments", "week-04"))
         os.makedirs(os.path.join(self.root, "prep"))
         self.put("lib/embedding.py", "VALUE = 1\n")
         self.put("tests/test_embedding.py", "import lib.embedding\n")
         self.put("tests/test_build_index.py", "import tools.build_index\n")
+        self.put("tests/test_prose_gate.py", "import prose_gate\n")
         self.put("data/corpus.txt", "text\n")
         self.put("experiments/week-03/embedding_lab.py", "from lib.embedding import VALUE\n")
+        self.put("experiments/week-04/residual_stream.py", "from lib.embedding import VALUE\n")
         self.put("prep/README.md", "internal notes\n")
         self.put("AGENTS.md", "internal rules\n")
         self.put("posts/2026-09-10-thu-am-tutorial.md", POST)
@@ -379,6 +382,7 @@ class TestEndToEnd(unittest.TestCase):
             "lib/embedding.py",
             "data/corpus.txt",
             "experiments/week-03/embedding_lab.py",
+            "experiments/week-04/residual_stream.py",
             "tests/test_embedding.py",
         ):
             self.assertTrue(
@@ -386,10 +390,57 @@ class TestEndToEnd(unittest.TestCase):
             )
 
     def test_tests_that_import_tools_are_not_copied(self):
+        """Every skipped file imports from tools/, which is never published.
+
+        A copied one would put a suite in the reader's repository that dies on
+        its import line, which is worse than shipping no suite at all.
+        """
         self.run_publisher()
-        self.assertFalse(
-            os.path.exists(os.path.join(self.dest, "tests", "test_build_index.py"))
+        for name in ("test_build_index.py", "test_prose_gate.py"):
+            self.assertFalse(
+                os.path.exists(os.path.join(self.dest, "tests", name)), name
+            )
+
+    def test_every_skipped_file_is_a_real_file_in_the_source(self):
+        """A stale entry in SKIP_FILES would silently stop skipping anything."""
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for relative in pub.SKIP_FILES:
+            self.assertTrue(
+                os.path.isfile(os.path.join(root, relative)),
+                f"{relative} is listed in SKIP_FILES but does not exist",
+            )
+
+    def test_every_published_experiment_week_exists_in_the_source(self):
+        """EXPERIMENT_WEEKS must not name a directory that is not there."""
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for week in pub.EXPERIMENT_WEEKS:
+            self.assertTrue(
+                os.path.isdir(os.path.join(root, "experiments", week)),
+                f"experiments/{week} is published but does not exist",
+            )
+
+    def test_a_post_naming_the_tools_tree_is_rejected(self):
+        """tools/ is excluded, so telling a reader to run something there
+        points at nothing. The link checker cannot see it, because it is not
+        a URL, so it needs its own rule."""
+        self.put(
+            "posts/2026-09-10-thu-pm-followup.md",
+            POST.replace(
+                "Good morning.", "Run the gate in tools/prose_gate.py to check it."
+            ),
         )
+        self.assertEqual(self.run_publisher(), 1)
+
+    def test_the_public_repository_url_is_allowed_in_reader_copy(self):
+        """A pointer at the reader's own repository must not read as a leak."""
+        self.put(
+            "posts/2026-09-10-thu-pm-followup.md",
+            POST.replace(
+                "Good morning.",
+                "Clone https://github.com/QuantumindSSI/Technologues.git",
+            ),
+        )
+        self.assertEqual(self.run_publisher(), 0)
 
     def test_published_post_carries_no_audit_header(self):
         self.run_publisher()

@@ -143,6 +143,118 @@ def hstack(matrices: Sequence[Sequence[Sequence[float]]]) -> Matrix:
     return stacked
 
 
+DEFAULT_RANK_TOLERANCE = 1e-9
+
+
+def reduced_row_echelon(
+    matrix: Sequence[Sequence[float]],
+    tolerance: float = DEFAULT_RANK_TOLERANCE,
+) -> tuple:
+    """Gauss-Jordan elimination with partial pivoting.
+
+    Args:
+        matrix: any rectangular matrix.
+        tolerance: a candidate pivot whose absolute value is at or below
+            this counts as zero. Floating point never produces an exact
+            zero after elimination, so a threshold is not optional; it is
+            a stated parameter so that a rank result carries its own
+            assumption instead of hiding it.
+
+    Returns:
+        (echelon, pivot_columns): a new matrix in reduced row echelon form,
+        and the column index of each pivot, ascending.
+
+    Raises:
+        ValueError: if the matrix is empty, ragged, or the tolerance is
+            not positive.
+
+    Complexity: O(rows^2 * cols).
+    """
+    rows, cols = shape(matrix)
+    if tolerance <= 0.0:
+        raise ValueError(f"tolerance must be positive, got {tolerance}")
+    work = [[float(value) for value in row] for row in matrix]
+    pivot_columns: List[int] = []
+    pivot_row = 0
+    for column in range(cols):
+        if pivot_row >= rows:
+            break
+        candidate = max(
+            range(pivot_row, rows), key=lambda index: abs(work[index][column])
+        )
+        if abs(work[candidate][column]) <= tolerance:
+            continue
+        work[pivot_row], work[candidate] = work[candidate], work[pivot_row]
+        scale_factor = work[pivot_row][column]
+        work[pivot_row] = [value / scale_factor for value in work[pivot_row]]
+        for index in range(rows):
+            if index == pivot_row:
+                continue
+            factor = work[index][column]
+            if factor == 0.0:
+                continue
+            work[index] = [
+                work[index][j] - factor * work[pivot_row][j] for j in range(cols)
+            ]
+        pivot_columns.append(column)
+        pivot_row += 1
+    return work, pivot_columns
+
+
+def matrix_rank(
+    matrix: Sequence[Sequence[float]],
+    tolerance: float = DEFAULT_RANK_TOLERANCE,
+) -> int:
+    """Number of independent rows, equivalently of independent columns.
+
+    Used in this series to answer a structural question about attention:
+    how much of the residual stream can a layer's key projections actually
+    read. A projection of rank r can only see an r-dimensional slice of
+    what is in front of it, no matter how wide the stream is.
+
+    Raises:
+        ValueError: propagated from `reduced_row_echelon`.
+    """
+    return len(reduced_row_echelon(matrix, tolerance)[1])
+
+
+def null_space_basis(
+    matrix: Sequence[Sequence[float]],
+    tolerance: float = DEFAULT_RANK_TOLERANCE,
+) -> Matrix:
+    """Basis for the row vectors this matrix annihilates.
+
+    Everything in this repository multiplies a row vector on the left, so
+    the useful null space is {x : x @ matrix == 0}, not {x : matrix @ x == 0}.
+    This returns a basis for that set.
+
+    Args:
+        matrix: an (n, m) matrix.
+        tolerance: passed to the elimination.
+
+    Returns:
+        A list of length-n basis vectors, empty when the matrix has full
+        row rank and there is nothing it annihilates.
+
+    Raises:
+        ValueError: propagated from `reduced_row_echelon`.
+
+    Complexity: O(n * m * min(n, m)).
+    """
+    rows, _ = shape(matrix)
+    echelon, pivot_columns = reduced_row_echelon(transpose(matrix), tolerance)
+    pivot_set = set(pivot_columns)
+    free_columns = [index for index in range(rows) if index not in pivot_set]
+    basis: Matrix = []
+    for free in free_columns:
+        vector = [0.0] * rows
+        vector[free] = 1.0
+        for row_index, pivot in enumerate(pivot_columns):
+            vector[pivot] = -echelon[row_index][free]
+        basis.append(vector)
+    return basis
+
+
 def softmax_rows(matrix: Sequence[Sequence[float]]) -> Matrix:
     """Apply softmax independently to each row.
 

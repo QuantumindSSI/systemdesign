@@ -83,14 +83,19 @@ WEEK_DAYS = (
 CODE_TREES = ("lib", "tests", "data")
 
 # experiments/ is copied per week so that consolidating earlier weeks stays a
-# deliberate decision rather than a side effect of running this script.
-EXPERIMENT_WEEKS = ("week-03",)
+# deliberate decision rather than a side effect of running this script. A week
+# whose articles are published and whose experiments are not ships dead links,
+# so this list must grow whenever a new week's articles start publishing. The
+# verifier catches the omission, because every embedded link is resolved
+# against the tree that was actually written.
+EXPERIMENT_WEEKS = ("week-03", "week-04")
 
 # These test the editorial machinery in tools/, which is not published. Copying
 # them would put a test suite in the public repository that fails on import.
 SKIP_FILES = frozenset(
     {
         os.path.join("tests", "test_build_index.py"),
+        os.path.join("tests", "test_prose_gate.py"),
         os.path.join("tests", "test_publication_gate.py"),
         os.path.join("tests", "test_publish_public.py"),
     }
@@ -99,7 +104,13 @@ SKIP_FILES = frozenset(
 # Anything matching these must never appear in the published tree. The verifier
 # treats a match as a hard failure rather than a warning.
 FORBIDDEN_PATHS = ("AGENTS.md", "prep", "tools", "content_calendar.csv")
-FORBIDDEN_TEXT = ("prep/", "content_calendar", "AGENTS.md")
+
+# Strings that must not survive into published text. "tools/" is here because
+# the tree is excluded from the public repository, so an article that tells a
+# reader to run something in it is pointing at nothing. That failure is
+# invisible to the link checker, which only resolves full URLs, so it needs its
+# own rule.
+FORBIDDEN_TEXT = ("prep/", "content_calendar", "AGENTS.md", "tools/")
 
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 

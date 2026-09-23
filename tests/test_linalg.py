@@ -7,6 +7,9 @@ from lib.linalg import (
     add,
     hstack,
     matmul,
+    matrix_rank,
+    null_space_basis,
+    reduced_row_echelon,
     scale,
     shape,
     softmax_rows,
@@ -135,6 +138,95 @@ class TestSoftmaxRows(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             softmax_rows([[float("-inf"), float("-inf")]])
         self.assertIn("entirely masked", str(ctx.exception))
+
+
+class TestReducedRowEchelon(unittest.TestCase):
+    def test_identity_is_already_reduced(self):
+        echelon, pivots = reduced_row_echelon([[1.0, 0.0], [0.0, 1.0]])
+        self.assertEqual(echelon, [[1.0, 0.0], [0.0, 1.0]])
+        self.assertEqual(pivots, [0, 1])
+
+    def test_dependent_rows_produce_a_zero_row(self):
+        echelon, pivots = reduced_row_echelon([[1.0, 2.0], [2.0, 4.0]])
+        self.assertEqual(pivots, [0])
+        self.assertEqual(echelon[1], [0.0, 0.0])
+
+    def test_free_column_is_skipped(self):
+        _, pivots = reduced_row_echelon([[0.0, 1.0], [0.0, 0.0]])
+        self.assertEqual(pivots, [1])
+
+    def test_partial_pivoting_survives_a_tiny_leading_entry(self):
+        """Without pivoting this divides by 1e-18 and loses every digit."""
+        echelon, pivots = reduced_row_echelon([[1e-18, 1.0], [1.0, 1.0]])
+        self.assertEqual(pivots, [0, 1])
+        self.assertAlmostEqual(echelon[0][0], 1.0, places=12)
+        self.assertAlmostEqual(echelon[0][1], 0.0, places=12)
+
+    def test_rejects_non_positive_tolerance(self):
+        with self.assertRaises(ValueError):
+            reduced_row_echelon([[1.0]], tolerance=0.0)
+
+    def test_rejects_ragged(self):
+        with self.assertRaises(ValueError):
+            reduced_row_echelon([[1.0, 2.0], [3.0]])
+
+
+class TestMatrixRank(unittest.TestCase):
+    def test_full_rank_identity(self):
+        self.assertEqual(matrix_rank([[1.0, 0.0], [0.0, 1.0]]), 2)
+
+    def test_rank_one(self):
+        self.assertEqual(matrix_rank([[1.0, 2.0], [3.0, 6.0]]), 1)
+
+    def test_zero_matrix_has_rank_zero(self):
+        self.assertEqual(matrix_rank([[0.0, 0.0], [0.0, 0.0]]), 0)
+
+    def test_rank_is_capped_by_the_smaller_dimension(self):
+        self.assertEqual(matrix_rank([[1.0, 2.0, 3.0]]), 1)
+        self.assertEqual(matrix_rank([[1.0], [2.0], [3.0]]), 1)
+
+    def test_rank_matches_transpose(self):
+        matrix = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
+        self.assertEqual(matrix_rank(matrix), matrix_rank(transpose(matrix)))
+
+    def test_tolerance_decides_a_near_singular_case(self):
+        nearly = [[1.0, 0.0], [0.0, 1e-12]]
+        self.assertEqual(matrix_rank(nearly, tolerance=1e-15), 2)
+        self.assertEqual(matrix_rank(nearly, tolerance=1e-9), 1)
+
+
+class TestNullSpaceBasis(unittest.TestCase):
+    def test_full_row_rank_annihilates_nothing(self):
+        self.assertEqual(null_space_basis([[1.0, 0.0], [0.0, 1.0]]), [])
+
+    def test_basis_size_is_rows_minus_rank(self):
+        matrix = [[1.0, 2.0], [2.0, 4.0], [3.0, 6.0]]
+        self.assertEqual(len(null_space_basis(matrix)), 3 - matrix_rank(matrix))
+
+    def test_every_basis_vector_is_annihilated_from_the_left(self):
+        matrix = [[1.0, 2.0], [2.0, 4.0], [0.0, 1.0]]
+        for vector in null_space_basis(matrix):
+            product = matmul([vector], matrix)[0]
+            for value in product:
+                self.assertAlmostEqual(value, 0.0, places=12)
+
+    def test_a_tall_random_matrix_has_the_expected_null_dimension(self):
+        import random as _random
+
+        rng = _random.Random(7)
+        matrix = [[rng.gauss(0.0, 1.0) for _ in range(4)] for _ in range(11)]
+        self.assertEqual(matrix_rank(matrix), 4)
+        self.assertEqual(len(null_space_basis(matrix)), 7)
+
+    def test_basis_vectors_are_independent(self):
+        matrix = [[1.0], [1.0], [1.0], [1.0]]
+        basis = null_space_basis(matrix)
+        self.assertEqual(len(basis), 3)
+        self.assertEqual(matrix_rank(basis), 3)
+
+    def test_rejects_ragged(self):
+        with self.assertRaises(ValueError):
+            null_space_basis([[1.0, 2.0], [3.0]])
 
 
 if __name__ == "__main__":

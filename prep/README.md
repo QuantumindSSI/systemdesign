@@ -1,4 +1,4 @@
-# Prep pack · Weeks 1-3 (2026-08-23 → 2026-09-12)
+# Prep pack · Weeks 1-4 (2026-08-23 → 2026-09-19)
 
 > **Internal working notes. Not a citable source (AGENTS.md, 2026-09-06).**
 > The tables below record that external repositories and pages were inspected
@@ -37,6 +37,14 @@ this directory.
 | W3 Fri 09-11 PM · RoPE, merged | (written direct to `posts/`) | `lib/rope.py`, `experiments/week-03/rope_properties.py` |
 | W3 Sat 09-12 AM · recap + quiz | (written direct to `posts/`) | re-quotes week-1 to week-3 artifacts, no new code |
 | W3 Sat 09-12 PM · weekend challenge | (written direct to `posts/`) | `lib/layernorm.py`, `experiments/week-03/norm_placement.py` |
+| W4 Sun 09-13 AM+PM · kickoff, poll | (written direct to `posts/`) | re-quotes all six week-4 scripts |
+| W4 Mon 09-14 AM+PM · residual streams | (written direct to `posts/`) | `lib/residual.py`, `experiments/week-04/residual_stream.py` |
+| W4 Tue 09-15 AM+PM · feed-forward | (written direct to `posts/`) | `lib/feedforward.py`, `experiments/week-04/feedforward_lab.py` |
+| W4 Wed 09-16 AM+PM · grouped-query | (written direct to `posts/`) | `lib/gqa.py`, `experiments/week-04/gqa_cache.py` |
+| W4 Thu 09-17 AM+PM · latent attention | (written direct to `posts/`) | `lib/mla.py`, `experiments/week-04/mla_absorption.py` |
+| W4 Fri 09-18 AM+PM · sliding window | (written direct to `posts/`) | `lib/sparse_attention.py`, `experiments/week-04/window_reach.py` |
+| W4 Sat 09-19 AM · recap + quiz | (written direct to `posts/`) | re-quotes all six week-4 scripts, no new code |
+| W4 Sat 09-19 PM · weekend challenge | (written direct to `posts/`) | `experiments/week-04/sparse_selection.py` |
 
 The week-1 and week-2 scripts: Python 3.8+ stdlib only, deterministic where
 applicable (seed 42), assertions encode each post's claims. Run them; if an
@@ -60,9 +68,118 @@ assertions passed", all byte-identical across two runs:
 | `experiments/week-03/rope_properties.py` | 8 s | `dd346762e3ace54bbf078fec78ad67e5` |
 | `experiments/week-03/norm_placement.py` | 4 s | `703197248266bafa4b5323f2d82fd4df` |
 
-`python3 -m unittest discover -s tests -t .` runs 270 tests, green on
-2026-09-09. It was 101 on 2026-09-06, 160 before the Wednesday work, and 214
-after Thursday's embedding module.
+Week-4 run log, all on 2026-09-13 unless stated, all exiting 0 with "All
+assertions passed", all byte-identical across two runs:
+
+| Artifact | Runtime | stdout md5 |
+|---|---|---|
+| `experiments/week-04/residual_stream.py` | 0.6 s | `490e464df6f75a098056e1a719f414a3` |
+| `experiments/week-04/feedforward_lab.py` | 0.5 s | `2aea2a2f7af00f3f26d3e3300d5e4321` |
+| `experiments/week-04/gqa_cache.py` | 0.4 s | `8e07dc410034d4711452ecfe5f91b1ae` |
+| `experiments/week-04/mla_absorption.py` | 0.2 s | `df6402327e6c4e0b56999d3bfa57e4af` |
+| `experiments/week-04/window_reach.py` | 2.7 s | `b6d110a1653176c824d51c896966b909` |
+| `experiments/week-04/sparse_selection.py` | 0.4 s | `9292898b2a822ea2e212806801a3eaa7` |
+
+`python3 -m unittest discover -s tests -t .` runs 601 tests, green on
+2026-09-13. It was 270 on 2026-09-09, 214 after week 3's Thursday embedding
+module, 160 before that Wednesday's work, and 101 on 2026-09-06.
+
+**Backward-compatibility check for week 4 (2026-09-13).** `lib/linalg.py`
+gained `reduced_row_echelon`, `matrix_rank` and `null_space_basis`. The change
+is purely additive: no existing function was touched and no default changed.
+Every week-3 experiment was re-run and reproduced its recorded stdout md5
+exactly, including `norm_placement.py` at `703197248266bafa4b5323f2d82fd4df`,
+`rope_properties.py` at `dd346762e3ace54bbf078fec78ad67e5`,
+`permutation_equivariance.py` at `da5e41c82094fe585cf9759c0420272e`,
+`embedding_lab.py` at `36c23c8fab0535cbf8b49e3454e526e7` and `bpe_trace.py` at
+`33236832cc519bee4ed0e83b77c32e8b`. Any future change to `lib/linalg.py` must
+repeat that check in the same commit.
+
+**Assertions and expectations that fired before publication in week 4**, kept
+as evidence the gates work. Three in total, all recorded in the articles that
+quote the affected measurements.
+
+`residual_stream.py` asserted the last attention write would be under a
+quarter of its outgoing stream; it measured 0.3537 and failed. The threshold
+was guessed, and the real effect is a trend across depth, so the claim was
+rewritten as the lower-half over upper-half mean write share, measuring 1.509.
+
+`feedforward_lab.py` asserted half the output length would need under a
+quarter of the live hidden units, checked at two positions; position 7
+measured 0.2623 and failed. All 32 positions range from 0.2132 to 0.2698, so
+the sample had been too small to reveal the bad threshold. The assertion now
+runs over every position with a ceiling of 0.33, above the measured maximum.
+
+`window_reach.py` originally perturbed a position by a constant vector and
+measured roughly 1e-14 influence everywhere, including under dense attention.
+That is a statement about layer normalization subtracting the row mean rather
+than a finding about attention, and it was caught only because the dense
+control was printed beside the windowed figures. The perturbation is now a
+zero-mean random direction.
+
+One test expectation was also wrong rather than the code: the hand-written
+expected mask for `sink_window_mask(6, 2, 2)` in
+`tests/test_sparse_attention.py` was incorrect at rows 3 to 5. The
+implementation was right, the expectation was rechecked row by row, and the
+test docstring now explains why row 3 looks dense.
+
+**Publisher corrected 2026-09-14, after three defects the simulation found.**
+Building the public tree with `tools/publish_public.py --dest <tmp>` before
+staging week 4 surfaced three problems that no other gate sees, because they
+only exist in the published tree.
+
+1. `EXPERIMENT_WEEKS` listed `week-03` only, so every week-4 article shipped a
+   dead link to `experiments/week-04/`. The publisher's own verifier caught
+   this. `week-04` is now listed, and a test asserts every named week exists.
+2. `tests/test_prose_gate.py` was being copied into the public repository,
+   where it dies on its import line because it imports from `tools/`, which is
+   excluded. It is now in `SKIP_FILES`, and a test asserts every skipped path
+   is a real file so a stale entry cannot silently stop skipping.
+3. A reader-facing sentence in the Sunday kickoff named `tools/`, pointing a
+   reader at a tree their repository does not contain. Nothing caught this,
+   because it is not a URL and the link checker only resolves URLs. `tools/` is
+   now in `FORBIDDEN_TEXT`, with a test that a post naming it is rejected.
+
+**Test counts differ between the two repositories, and reader-facing copy must
+quote the reader's number.** The working suite is 601 tests. The published
+suite is 460, because four test files cover the editorial machinery in `tools/`
+and are never shipped. An article that says "run this command and you will see
+N tests" is making a claim about the reader's repository, so the week-4
+articles quote 460 and 211, not 601 and 319. The audit header of the Sunday
+kickoff records both numbers and why they differ.
+
+**Convention adopted 2026-09-14: every 17:00 post carries a repository
+pointer.** The evening post is where a reader is invited to take the code
+apart, so each one now names `github.com/QuantumindSSI/Technologues` directly,
+with a clone command, that day's experiment, the test command, and a note that
+issues rather than pull requests are the way in. The URL is written in its
+public form on purpose: `rewrite_links` only replaces
+`.../systemdesign/blob/main/`, so a bare source-repository root URL would
+survive unrewritten and `FOREIGN_REPO` would then flag it as a third-party
+repository. Both regexes were checked against the literal string before it was
+embedded, and `tests/test_publish_public.py` now asserts that a post carrying
+the public URL publishes cleanly.
+
+**Run before staging any day's posts:**
+
+```
+python3 -m unittest discover -s tests -t .
+python3 tools/prose_gate.py
+python3 tools/publication_gate.py
+python3 tools/build_index.py --check
+python3 tools/publish_public.py --root . --dest /tmp/pub    # then read /tmp/pub
+```
+
+The last one is the only check that sees the repository a reader actually gets.
+
+**New gate added 2026-09-13.** `tools/prose_gate.py` enforces the three
+mechanically checkable prose rules from `AGENTS.md` over reader-facing copy
+only: no em dashes, no sentence opening with a conjunction, no collapsed
+contrastive framing. Fenced code blocks and inline code spans are skipped;
+quotations are not, because a quoted em dash still reaches a reader. Covered
+by `tests/test_prose_gate.py`, 33 tests, including one that runs the gate over
+every committed week-4 post. Run it before staging alongside
+`tools/publication_gate.py`.
 
 ## Publication-gap inventory and disposition (decided 2026-09-09)
 
@@ -152,6 +269,36 @@ Local shallow clones live in `repos/` (gitignored). Re-clone with:
 |---|---|---|
 | Radford et al., GPT-2, `cdn.openai.com/better-language-models/...pdf` | verified, PDF downloaded and text-extracted with `pdftotext -layout`. Section 2.2 read in full | W3 Wed case study (byte-level base 256 vs "over 130,000"; the `dog. dog! dog?` observation; "prevent BPE from merging across character categories"; the space exception), W3 Thu tutorial (Table 2's four rows, vocabulary 50,257, context 512 to 1,024) |
 | arXiv:2305.15425 Petrov, La Malfa, Torr, Bibi, tokenizer unfairness (NeurIPS 2023) | verified, abstract fetched and read | W3 Wed case study, "up to 15 times" and "over 4 times" |
+
+## External source verification log (2026-09-13, week 4)
+
+| Source | Status | Used for |
+|---|---|---|
+| arXiv:1512.03385 He et al., deep residual learning | verified, abstract fetched and read | W4 Sun kickoff, Mon residual streams |
+| arXiv:2012.14913 Geva et al., feed-forward as key-value memories | verified, abstract fetched and read | W4 Sun kickoff, Tue feed-forward |
+| arXiv:2002.05202 Shazeer, GLU variants | verified, abstract fetched and read | W4 Tue feed-forward, gated arithmetic |
+| arXiv:1911.02150 Shazeer, multi-query attention | verified, abstract fetched and read | W4 Sun kickoff, Wed grouped-query |
+| arXiv:2305.13245 Ainslie et al., GQA (EMNLP 2023) | verified, abstract fetched and read | W4 Sun kickoff, Wed grouped-query |
+| arXiv:2405.04434 DeepSeek-V2 | verified, abstract fetched and read | W4 Sun kickoff, Thu latent attention |
+| arXiv:2412.19437 DeepSeek-V3 technical report | verified, abstract fetched and read | W4 Sun kickoff, Thu latent attention |
+| arXiv:2004.05150 Beltagy et al., Longformer | verified, abstract fetched and read | W4 Sun kickoff, Fri sliding window |
+| arXiv:2310.06825 Jiang et al., Mistral 7B | verified, abstract fetched and read | W4 Sun kickoff, Wed grouped-query, Fri sliding window |
+| arXiv:2502.11089 Yuan et al., Native Sparse Attention | verified, abstract fetched and read | W4 Sun kickoff, Sat weekend challenge |
+| arXiv:2607.24593 Liu et al., PIVOT | verified, abstract read via arXiv search listing | W4 Sun kickoff, Sat challenge, as a THIRD-PARTY description of a deployed system |
+| arXiv:2605.07363 Zhou et al., MISA | verified, abstract read via arXiv search listing | W4 Sun kickoff, Sat challenge, as a THIRD-PARTY description |
+
+**Source limitation for the week-4 Saturday topic, recorded so it is not
+quietly reconsidered.** The primary technical report for the deployed sparse
+attention system named in the calendar row is distributed through a code
+repository rather than a preprint server, and the canonical source rule
+forbids citing it in any form. The two entries marked THIRD-PARTY above are
+preprints by other groups characterising that system in order to improve on
+it. They are labelled as third-party descriptions at every point of use in the
+articles, and no figure is attributed to the original report. Two related
+preprints found in the same search, arXiv:2608.01662 and arXiv:2512.03494,
+were read and not quoted, because the two used were sufficient and adding more
+secondary descriptions would not have strengthened a claim that is already
+labelled secondary.
 
 Not used, and the reason recorded so it is not quietly reconsidered: the
 paper's `dog. dog! dog?` observation has no published magnitude attached to

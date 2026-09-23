@@ -25,6 +25,18 @@ python3 tools/publication_gate.py              # the rules this repo runs under
 Articles are listed below as they publish. Posts written ahead of their day
 are deliberately absent: they are not committed until the morning they go out.
 
+## Week 5
+
+- **2026-09-23 AM** [The mental model for feed-forward blocks, before the code](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-23-wed-am-essay-feed-forward-blocks.md)
+- **2026-09-23 PM** [Tracing the code that implements feed-forward blocks](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-23-wed-pm-followup-feedforward-walkthrough.md)
+
+## Week 4
+
+- **2026-09-13 AM** [Theme kickoff: LLM Internals and Pretraining, Foundations part 2](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-13-sun-am-theme-kickoff.md)
+- **2026-09-13 PM** [Poll: Where are you with the parts that make attention affordable?](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-13-sun-pm-poll.md)
+- **2026-09-14 AM** [Residual streams, explained from first principles](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-14-mon-am-essay-residual-streams.md)
+- **2026-09-14 PM** [Residual streams in one diagram](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-14-mon-pm-followup-residual-diagram.md)
+
 ## Week 3
 
 - **2026-09-06 AM** [Theme kickoff: LLM Internals and Pretraining, Foundations part 1](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-06-sun-am-theme-kickoff.md)
@@ -35,6 +47,10 @@ are deliberately absent: they are not committed until the morning they go out.
 - **2026-09-09 PM** [Follow-up: Twelve Merges You Can Check by Hand, and Two Ways to Get This Wrong](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-09-wed-pm-followup-bpe-code-walkthrough.md)
 - **2026-09-10 AM** [Hands-on: Build an Embedding Layer in an Hour and Find Out It Knows Nothing](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-10-thu-am-tutorial-embedding-layers.md)
 - **2026-09-10 PM** [Follow-up: Five Checks Before You Trust Your Embedding Layer](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-10-thu-pm-followup-embedding-mistakes-checklist.md)
+- **2026-09-11 AM** [Long-form: The Mechanism We Skipped, and the Hole in It That Needs Filling Tonight](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-11-fri-am-essay-self-attention-foundations.md)
+- **2026-09-11 PM** [Follow-up: Two of RoPE's Three Promises Are Algebra, and Everybody Quotes the Third](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-11-fri-pm-followup-rope-contrarian-debate.md)
+- **2026-09-12 AM** [Recap and Quiz: Six Mechanisms, Three Answers I Owed You, and One Map](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-12-sat-am-recap-quiz.md)
+- **2026-09-12 PM** [Weekend Challenge: Move One Function Call and Watch the Gradients Move](https://github.com/QuantumindSSI/systemdesign/blob/main/posts/2026-09-12-sat-pm-weekend-challenge-norm-placement.md)
 
 ## Week 2
 
